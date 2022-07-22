@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/dtekcth/dtek-api/api"
+	"github.com/dtekcth/dtek-api/db"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/rs/zerolog"
@@ -12,6 +13,9 @@ import (
 
 func main() {
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: "15:04"})
+
+	db.Init()
+	defer db.Close()
 
 	e := echo.New()
 
@@ -41,4 +45,6 @@ func main() {
 		g := e.Group("/api")
 		g.GET("/lunch", api.TodaysLunch)
 	}
+
+	log.Fatal().Err(e.Start(":8080")).Msg("server exited")
 }
