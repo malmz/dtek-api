@@ -8,9 +8,3 @@ import (
 
 // LunchMenu is the predicate function for lunchmenu builders.
 type LunchMenu func(*sql.Selector)
-
-// LunchMenuItem is the predicate function for lunchmenuitem builders.
-type LunchMenuItem func(*sql.Selector)
-
-// Resturant is the predicate function for resturant builders.
-type Resturant func(*sql.Selector)

@@ -4,7 +4,6 @@ package ent
 
 import (
 	"context"
-	"database/sql/driver"
 	"fmt"
 	"math"
 
@@ -12,9 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/dtekcth/dtek-api/ent/lunchmenu"
-	"github.com/dtekcth/dtek-api/ent/lunchmenuitem"
 	"github.com/dtekcth/dtek-api/ent/predicate"
-	"github.com/dtekcth/dtek-api/ent/resturant"
 )
 
 // LunchMenuQuery is the builder for querying LunchMenu entities.
@@ -26,10 +23,6 @@ type LunchMenuQuery struct {
 	order      []OrderFunc
 	fields     []string
 	predicates []predicate.LunchMenu
-	// eager-loading edges.
-	withItems     *LunchMenuItemQuery
-	withResturant *ResturantQuery
-	withFKs       bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -64,50 +57,6 @@ func (lmq *LunchMenuQuery) Unique(unique bool) *LunchMenuQuery {
 func (lmq *LunchMenuQuery) Order(o ...OrderFunc) *LunchMenuQuery {
 	lmq.order = append(lmq.order, o...)
 	return lmq
-}
-
-// QueryItems chains the current query on the "items" edge.
-func (lmq *LunchMenuQuery) QueryItems() *LunchMenuItemQuery {
-	query := &LunchMenuItemQuery{config: lmq.config}
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := lmq.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := lmq.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(lunchmenu.Table, lunchmenu.FieldID, selector),
-			sqlgraph.To(lunchmenuitem.Table, lunchmenuitem.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, lunchmenu.ItemsTable, lunchmenu.ItemsColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(lmq.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
-// QueryResturant chains the current query on the "resturant" edge.
-func (lmq *LunchMenuQuery) QueryResturant() *ResturantQuery {
-	query := &ResturantQuery{config: lmq.config}
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := lmq.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := lmq.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(lunchmenu.Table, lunchmenu.FieldID, selector),
-			sqlgraph.To(resturant.Table, resturant.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, lunchmenu.ResturantTable, lunchmenu.ResturantColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(lmq.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
 }
 
 // First returns the first LunchMenu entity from the query.
@@ -286,40 +235,16 @@ func (lmq *LunchMenuQuery) Clone() *LunchMenuQuery {
 		return nil
 	}
 	return &LunchMenuQuery{
-		config:        lmq.config,
-		limit:         lmq.limit,
-		offset:        lmq.offset,
-		order:         append([]OrderFunc{}, lmq.order...),
-		predicates:    append([]predicate.LunchMenu{}, lmq.predicates...),
-		withItems:     lmq.withItems.Clone(),
-		withResturant: lmq.withResturant.Clone(),
+		config:     lmq.config,
+		limit:      lmq.limit,
+		offset:     lmq.offset,
+		order:      append([]OrderFunc{}, lmq.order...),
+		predicates: append([]predicate.LunchMenu{}, lmq.predicates...),
 		// clone intermediate query.
 		sql:    lmq.sql.Clone(),
 		path:   lmq.path,
 		unique: lmq.unique,
 	}
-}
-
-// WithItems tells the query-builder to eager-load the nodes that are connected to
-// the "items" edge. The optional arguments are used to configure the query builder of the edge.
-func (lmq *LunchMenuQuery) WithItems(opts ...func(*LunchMenuItemQuery)) *LunchMenuQuery {
-	query := &LunchMenuItemQuery{config: lmq.config}
-	for _, opt := range opts {
-		opt(query)
-	}
-	lmq.withItems = query
-	return lmq
-}
-
-// WithResturant tells the query-builder to eager-load the nodes that are connected to
-// the "resturant" edge. The optional arguments are used to configure the query builder of the edge.
-func (lmq *LunchMenuQuery) WithResturant(opts ...func(*ResturantQuery)) *LunchMenuQuery {
-	query := &ResturantQuery{config: lmq.config}
-	for _, opt := range opts {
-		opt(query)
-	}
-	lmq.withResturant = query
-	return lmq
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -328,12 +253,12 @@ func (lmq *LunchMenuQuery) WithResturant(opts ...func(*ResturantQuery)) *LunchMe
 // Example:
 //
 //	var v []struct {
-//		Date time.Time `json:"date,omitempty"`
+//		UpdateTime time.Time `json:"update_time,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.LunchMenu.Query().
-//		GroupBy(lunchmenu.FieldDate).
+//		GroupBy(lunchmenu.FieldUpdateTime).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 //
@@ -357,11 +282,11 @@ func (lmq *LunchMenuQuery) GroupBy(field string, fields ...string) *LunchMenuGro
 // Example:
 //
 //	var v []struct {
-//		Date time.Time `json:"date,omitempty"`
+//		UpdateTime time.Time `json:"update_time,omitempty"`
 //	}
 //
 //	client.LunchMenu.Query().
-//		Select(lunchmenu.FieldDate).
+//		Select(lunchmenu.FieldUpdateTime).
 //		Scan(ctx, &v)
 //
 func (lmq *LunchMenuQuery) Select(fields ...string) *LunchMenuSelect {
@@ -390,27 +315,15 @@ func (lmq *LunchMenuQuery) prepareQuery(ctx context.Context) error {
 
 func (lmq *LunchMenuQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*LunchMenu, error) {
 	var (
-		nodes       = []*LunchMenu{}
-		withFKs     = lmq.withFKs
-		_spec       = lmq.querySpec()
-		loadedTypes = [2]bool{
-			lmq.withItems != nil,
-			lmq.withResturant != nil,
-		}
+		nodes = []*LunchMenu{}
+		_spec = lmq.querySpec()
 	)
-	if lmq.withResturant != nil {
-		withFKs = true
-	}
-	if withFKs {
-		_spec.Node.Columns = append(_spec.Node.Columns, lunchmenu.ForeignKeys...)
-	}
 	_spec.ScanValues = func(columns []string) ([]interface{}, error) {
 		return (*LunchMenu).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []interface{}) error {
 		node := &LunchMenu{config: lmq.config}
 		nodes = append(nodes, node)
-		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
 	for i := range hooks {
@@ -422,65 +335,6 @@ func (lmq *LunchMenuQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*L
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-
-	if query := lmq.withItems; query != nil {
-		fks := make([]driver.Value, 0, len(nodes))
-		nodeids := make(map[int]*LunchMenu)
-		for i := range nodes {
-			fks = append(fks, nodes[i].ID)
-			nodeids[nodes[i].ID] = nodes[i]
-			nodes[i].Edges.Items = []*LunchMenuItem{}
-		}
-		query.withFKs = true
-		query.Where(predicate.LunchMenuItem(func(s *sql.Selector) {
-			s.Where(sql.InValues(lunchmenu.ItemsColumn, fks...))
-		}))
-		neighbors, err := query.All(ctx)
-		if err != nil {
-			return nil, err
-		}
-		for _, n := range neighbors {
-			fk := n.lunch_menu_items
-			if fk == nil {
-				return nil, fmt.Errorf(`foreign-key "lunch_menu_items" is nil for node %v`, n.ID)
-			}
-			node, ok := nodeids[*fk]
-			if !ok {
-				return nil, fmt.Errorf(`unexpected foreign-key "lunch_menu_items" returned %v for node %v`, *fk, n.ID)
-			}
-			node.Edges.Items = append(node.Edges.Items, n)
-		}
-	}
-
-	if query := lmq.withResturant; query != nil {
-		ids := make([]int, 0, len(nodes))
-		nodeids := make(map[int][]*LunchMenu)
-		for i := range nodes {
-			if nodes[i].resturant_menu == nil {
-				continue
-			}
-			fk := *nodes[i].resturant_menu
-			if _, ok := nodeids[fk]; !ok {
-				ids = append(ids, fk)
-			}
-			nodeids[fk] = append(nodeids[fk], nodes[i])
-		}
-		query.Where(resturant.IDIn(ids...))
-		neighbors, err := query.All(ctx)
-		if err != nil {
-			return nil, err
-		}
-		for _, n := range neighbors {
-			nodes, ok := nodeids[n.ID]
-			if !ok {
-				return nil, fmt.Errorf(`unexpected foreign-key "resturant_menu" returned %v`, n.ID)
-			}
-			for i := range nodes {
-				nodes[i].Edges.Resturant = n
-			}
-		}
-	}
-
 	return nodes, nil
 }
 

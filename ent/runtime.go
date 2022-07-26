@@ -3,7 +3,9 @@
 package ent
 
 import (
-	"github.com/dtekcth/dtek-api/ent/lunchmenuitem"
+	"time"
+
+	"github.com/dtekcth/dtek-api/ent/lunchmenu"
 	"github.com/dtekcth/dtek-api/ent/schema"
 )
 
@@ -11,10 +13,15 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
-	lunchmenuitemFields := schema.LunchMenuItem{}.Fields()
-	_ = lunchmenuitemFields
-	// lunchmenuitemDescPreformatted is the schema descriptor for preformatted field.
-	lunchmenuitemDescPreformatted := lunchmenuitemFields[3].Descriptor()
-	// lunchmenuitem.DefaultPreformatted holds the default value on creation for the preformatted field.
-	lunchmenuitem.DefaultPreformatted = lunchmenuitemDescPreformatted.Default.(bool)
+	lunchmenuMixin := schema.LunchMenu{}.Mixin()
+	lunchmenuMixinFields0 := lunchmenuMixin[0].Fields()
+	_ = lunchmenuMixinFields0
+	lunchmenuFields := schema.LunchMenu{}.Fields()
+	_ = lunchmenuFields
+	// lunchmenuDescUpdateTime is the schema descriptor for update_time field.
+	lunchmenuDescUpdateTime := lunchmenuMixinFields0[0].Descriptor()
+	// lunchmenu.DefaultUpdateTime holds the default value on creation for the update_time field.
+	lunchmenu.DefaultUpdateTime = lunchmenuDescUpdateTime.Default.(func() time.Time)
+	// lunchmenu.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
+	lunchmenu.UpdateDefaultUpdateTime = lunchmenuDescUpdateTime.UpdateDefault.(func() time.Time)
 }

@@ -14,10 +14,6 @@ type Tx struct {
 	config
 	// LunchMenu is the client for interacting with the LunchMenu builders.
 	LunchMenu *LunchMenuClient
-	// LunchMenuItem is the client for interacting with the LunchMenuItem builders.
-	LunchMenuItem *LunchMenuItemClient
-	// Resturant is the client for interacting with the Resturant builders.
-	Resturant *ResturantClient
 
 	// lazily loaded.
 	client     *Client
@@ -154,8 +150,6 @@ func (tx *Tx) Client() *Client {
 
 func (tx *Tx) init() {
 	tx.LunchMenu = NewLunchMenuClient(tx.config)
-	tx.LunchMenuItem = NewLunchMenuItemClient(tx.config)
-	tx.Resturant = NewResturantClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.

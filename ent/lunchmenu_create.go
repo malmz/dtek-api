@@ -11,8 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/dtekcth/dtek-api/ent/lunchmenu"
-	"github.com/dtekcth/dtek-api/ent/lunchmenuitem"
-	"github.com/dtekcth/dtek-api/ent/resturant"
+	"github.com/dtekcth/dtek-api/model"
 )
 
 // LunchMenuCreate is the builder for creating a LunchMenu entity.
@@ -22,36 +21,50 @@ type LunchMenuCreate struct {
 	hooks    []Hook
 }
 
+// SetUpdateTime sets the "update_time" field.
+func (lmc *LunchMenuCreate) SetUpdateTime(t time.Time) *LunchMenuCreate {
+	lmc.mutation.SetUpdateTime(t)
+	return lmc
+}
+
+// SetNillableUpdateTime sets the "update_time" field if the given value is not nil.
+func (lmc *LunchMenuCreate) SetNillableUpdateTime(t *time.Time) *LunchMenuCreate {
+	if t != nil {
+		lmc.SetUpdateTime(*t)
+	}
+	return lmc
+}
+
+// SetResturant sets the "resturant" field.
+func (lmc *LunchMenuCreate) SetResturant(s string) *LunchMenuCreate {
+	lmc.mutation.SetResturant(s)
+	return lmc
+}
+
 // SetDate sets the "date" field.
 func (lmc *LunchMenuCreate) SetDate(t time.Time) *LunchMenuCreate {
 	lmc.mutation.SetDate(t)
 	return lmc
 }
 
-// AddItemIDs adds the "items" edge to the LunchMenuItem entity by IDs.
-func (lmc *LunchMenuCreate) AddItemIDs(ids ...int) *LunchMenuCreate {
-	lmc.mutation.AddItemIDs(ids...)
+// SetLanguage sets the "language" field.
+func (lmc *LunchMenuCreate) SetLanguage(l lunchmenu.Language) *LunchMenuCreate {
+	lmc.mutation.SetLanguage(l)
 	return lmc
 }
 
-// AddItems adds the "items" edges to the LunchMenuItem entity.
-func (lmc *LunchMenuCreate) AddItems(l ...*LunchMenuItem) *LunchMenuCreate {
-	ids := make([]int, len(l))
-	for i := range l {
-		ids[i] = l[i].ID
+// SetNillableLanguage sets the "language" field if the given value is not nil.
+func (lmc *LunchMenuCreate) SetNillableLanguage(l *lunchmenu.Language) *LunchMenuCreate {
+	if l != nil {
+		lmc.SetLanguage(*l)
 	}
-	return lmc.AddItemIDs(ids...)
-}
-
-// SetResturantID sets the "resturant" edge to the Resturant entity by ID.
-func (lmc *LunchMenuCreate) SetResturantID(id int) *LunchMenuCreate {
-	lmc.mutation.SetResturantID(id)
 	return lmc
 }
 
-// SetResturant sets the "resturant" edge to the Resturant entity.
-func (lmc *LunchMenuCreate) SetResturant(r *Resturant) *LunchMenuCreate {
-	return lmc.SetResturantID(r.ID)
+// SetMenu sets the "menu" field.
+func (lmc *LunchMenuCreate) SetMenu(mmi []model.LunchMenuItem) *LunchMenuCreate {
+	lmc.mutation.SetMenu(mmi)
+	return lmc
 }
 
 // Mutation returns the LunchMenuMutation object of the builder.
@@ -65,6 +78,7 @@ func (lmc *LunchMenuCreate) Save(ctx context.Context) (*LunchMenu, error) {
 		err  error
 		node *LunchMenu
 	)
+	lmc.defaults()
 	if len(lmc.hooks) == 0 {
 		if err = lmc.check(); err != nil {
 			return nil, err
@@ -128,13 +142,32 @@ func (lmc *LunchMenuCreate) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (lmc *LunchMenuCreate) defaults() {
+	if _, ok := lmc.mutation.UpdateTime(); !ok {
+		v := lunchmenu.DefaultUpdateTime()
+		lmc.mutation.SetUpdateTime(v)
+	}
+}
+
 // check runs all checks and user-defined validators on the builder.
 func (lmc *LunchMenuCreate) check() error {
+	if _, ok := lmc.mutation.UpdateTime(); !ok {
+		return &ValidationError{Name: "update_time", err: errors.New(`ent: missing required field "LunchMenu.update_time"`)}
+	}
+	if _, ok := lmc.mutation.Resturant(); !ok {
+		return &ValidationError{Name: "resturant", err: errors.New(`ent: missing required field "LunchMenu.resturant"`)}
+	}
 	if _, ok := lmc.mutation.Date(); !ok {
 		return &ValidationError{Name: "date", err: errors.New(`ent: missing required field "LunchMenu.date"`)}
 	}
-	if _, ok := lmc.mutation.ResturantID(); !ok {
-		return &ValidationError{Name: "resturant", err: errors.New(`ent: missing required edge "LunchMenu.resturant"`)}
+	if v, ok := lmc.mutation.Language(); ok {
+		if err := lunchmenu.LanguageValidator(v); err != nil {
+			return &ValidationError{Name: "language", err: fmt.Errorf(`ent: validator failed for field "LunchMenu.language": %w`, err)}
+		}
+	}
+	if _, ok := lmc.mutation.Menu(); !ok {
+		return &ValidationError{Name: "menu", err: errors.New(`ent: missing required field "LunchMenu.menu"`)}
 	}
 	return nil
 }
@@ -163,6 +196,22 @@ func (lmc *LunchMenuCreate) createSpec() (*LunchMenu, *sqlgraph.CreateSpec) {
 			},
 		}
 	)
+	if value, ok := lmc.mutation.UpdateTime(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: lunchmenu.FieldUpdateTime,
+		})
+		_node.UpdateTime = value
+	}
+	if value, ok := lmc.mutation.Resturant(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: lunchmenu.FieldResturant,
+		})
+		_node.Resturant = value
+	}
 	if value, ok := lmc.mutation.Date(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeTime,
@@ -171,44 +220,21 @@ func (lmc *LunchMenuCreate) createSpec() (*LunchMenu, *sqlgraph.CreateSpec) {
 		})
 		_node.Date = value
 	}
-	if nodes := lmc.mutation.ItemsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   lunchmenu.ItemsTable,
-			Columns: []string{lunchmenu.ItemsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: lunchmenuitem.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
+	if value, ok := lmc.mutation.Language(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeEnum,
+			Value:  value,
+			Column: lunchmenu.FieldLanguage,
+		})
+		_node.Language = value
 	}
-	if nodes := lmc.mutation.ResturantIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   lunchmenu.ResturantTable,
-			Columns: []string{lunchmenu.ResturantColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: resturant.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_node.resturant_menu = &nodes[0]
-		_spec.Edges = append(_spec.Edges, edge)
+	if value, ok := lmc.mutation.Menu(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeJSON,
+			Value:  value,
+			Column: lunchmenu.FieldMenu,
+		})
+		_node.Menu = value
 	}
 	return _node, _spec
 }
@@ -227,6 +253,7 @@ func (lmcb *LunchMenuCreateBulk) Save(ctx context.Context) ([]*LunchMenu, error)
 	for i := range lmcb.builders {
 		func(i int, root context.Context) {
 			builder := lmcb.builders[i]
+			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*LunchMenuMutation)
 				if !ok {

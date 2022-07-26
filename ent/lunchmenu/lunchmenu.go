@@ -2,45 +2,38 @@
 
 package lunchmenu
 
+import (
+	"fmt"
+	"time"
+)
+
 const (
 	// Label holds the string label denoting the lunchmenu type in the database.
 	Label = "lunch_menu"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
+	// FieldUpdateTime holds the string denoting the update_time field in the database.
+	FieldUpdateTime = "update_time"
+	// FieldResturant holds the string denoting the resturant field in the database.
+	FieldResturant = "resturant"
 	// FieldDate holds the string denoting the date field in the database.
 	FieldDate = "date"
-	// EdgeItems holds the string denoting the items edge name in mutations.
-	EdgeItems = "items"
-	// EdgeResturant holds the string denoting the resturant edge name in mutations.
-	EdgeResturant = "resturant"
+	// FieldLanguage holds the string denoting the language field in the database.
+	FieldLanguage = "language"
+	// FieldMenu holds the string denoting the menu field in the database.
+	FieldMenu = "menu"
 	// Table holds the table name of the lunchmenu in the database.
 	Table = "lunch_menus"
-	// ItemsTable is the table that holds the items relation/edge.
-	ItemsTable = "lunch_menu_items"
-	// ItemsInverseTable is the table name for the LunchMenuItem entity.
-	// It exists in this package in order to avoid circular dependency with the "lunchmenuitem" package.
-	ItemsInverseTable = "lunch_menu_items"
-	// ItemsColumn is the table column denoting the items relation/edge.
-	ItemsColumn = "lunch_menu_items"
-	// ResturantTable is the table that holds the resturant relation/edge.
-	ResturantTable = "lunch_menus"
-	// ResturantInverseTable is the table name for the Resturant entity.
-	// It exists in this package in order to avoid circular dependency with the "resturant" package.
-	ResturantInverseTable = "resturants"
-	// ResturantColumn is the table column denoting the resturant relation/edge.
-	ResturantColumn = "resturant_menu"
 )
 
 // Columns holds all SQL columns for lunchmenu fields.
 var Columns = []string{
 	FieldID,
+	FieldUpdateTime,
+	FieldResturant,
 	FieldDate,
-}
-
-// ForeignKeys holds the SQL foreign-keys that are owned by the "lunch_menus"
-// table and are not defined as standalone fields in the schema.
-var ForeignKeys = []string{
-	"resturant_menu",
+	FieldLanguage,
+	FieldMenu,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -50,10 +43,35 @@ func ValidColumn(column string) bool {
 			return true
 		}
 	}
-	for i := range ForeignKeys {
-		if column == ForeignKeys[i] {
-			return true
-		}
-	}
 	return false
+}
+
+var (
+	// DefaultUpdateTime holds the default value on creation for the "update_time" field.
+	DefaultUpdateTime func() time.Time
+	// UpdateDefaultUpdateTime holds the default value on update for the "update_time" field.
+	UpdateDefaultUpdateTime func() time.Time
+)
+
+// Language defines the type for the "language" enum field.
+type Language string
+
+// Language values.
+const (
+	LanguageSe Language = "se"
+	LanguageEn Language = "en"
+)
+
+func (l Language) String() string {
+	return string(l)
+}
+
+// LanguageValidator is a validator for the "language" field enum values. It is called by the builders before save.
+func LanguageValidator(l Language) error {
+	switch l {
+	case LanguageSe, LanguageEn:
+		return nil
+	default:
+		return fmt.Errorf("lunchmenu: invalid enum value for language field: %q", l)
+	}
 }

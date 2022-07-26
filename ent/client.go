@@ -10,12 +10,9 @@ import (
 	"github.com/dtekcth/dtek-api/ent/migrate"
 
 	"github.com/dtekcth/dtek-api/ent/lunchmenu"
-	"github.com/dtekcth/dtek-api/ent/lunchmenuitem"
-	"github.com/dtekcth/dtek-api/ent/resturant"
 
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
-	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 // Client is the client that holds all ent builders.
@@ -25,10 +22,6 @@ type Client struct {
 	Schema *migrate.Schema
 	// LunchMenu is the client for interacting with the LunchMenu builders.
 	LunchMenu *LunchMenuClient
-	// LunchMenuItem is the client for interacting with the LunchMenuItem builders.
-	LunchMenuItem *LunchMenuItemClient
-	// Resturant is the client for interacting with the Resturant builders.
-	Resturant *ResturantClient
 }
 
 // NewClient creates a new client configured with the given options.
@@ -43,8 +36,6 @@ func NewClient(opts ...Option) *Client {
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.LunchMenu = NewLunchMenuClient(c.config)
-	c.LunchMenuItem = NewLunchMenuItemClient(c.config)
-	c.Resturant = NewResturantClient(c.config)
 }
 
 // Open opens a database/sql.DB specified by the driver name and
@@ -76,11 +67,9 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:           ctx,
-		config:        cfg,
-		LunchMenu:     NewLunchMenuClient(cfg),
-		LunchMenuItem: NewLunchMenuItemClient(cfg),
-		Resturant:     NewResturantClient(cfg),
+		ctx:       ctx,
+		config:    cfg,
+		LunchMenu: NewLunchMenuClient(cfg),
 	}, nil
 }
 
@@ -98,11 +87,9 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:           ctx,
-		config:        cfg,
-		LunchMenu:     NewLunchMenuClient(cfg),
-		LunchMenuItem: NewLunchMenuItemClient(cfg),
-		Resturant:     NewResturantClient(cfg),
+		ctx:       ctx,
+		config:    cfg,
+		LunchMenu: NewLunchMenuClient(cfg),
 	}, nil
 }
 
@@ -133,8 +120,6 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	c.LunchMenu.Use(hooks...)
-	c.LunchMenuItem.Use(hooks...)
-	c.Resturant.Use(hooks...)
 }
 
 // LunchMenuClient is a client for the LunchMenu schema.
@@ -222,251 +207,7 @@ func (c *LunchMenuClient) GetX(ctx context.Context, id int) *LunchMenu {
 	return obj
 }
 
-// QueryItems queries the items edge of a LunchMenu.
-func (c *LunchMenuClient) QueryItems(lm *LunchMenu) *LunchMenuItemQuery {
-	query := &LunchMenuItemQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
-		id := lm.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(lunchmenu.Table, lunchmenu.FieldID, id),
-			sqlgraph.To(lunchmenuitem.Table, lunchmenuitem.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, lunchmenu.ItemsTable, lunchmenu.ItemsColumn),
-		)
-		fromV = sqlgraph.Neighbors(lm.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryResturant queries the resturant edge of a LunchMenu.
-func (c *LunchMenuClient) QueryResturant(lm *LunchMenu) *ResturantQuery {
-	query := &ResturantQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
-		id := lm.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(lunchmenu.Table, lunchmenu.FieldID, id),
-			sqlgraph.To(resturant.Table, resturant.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, lunchmenu.ResturantTable, lunchmenu.ResturantColumn),
-		)
-		fromV = sqlgraph.Neighbors(lm.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
 // Hooks returns the client hooks.
 func (c *LunchMenuClient) Hooks() []Hook {
 	return c.hooks.LunchMenu
-}
-
-// LunchMenuItemClient is a client for the LunchMenuItem schema.
-type LunchMenuItemClient struct {
-	config
-}
-
-// NewLunchMenuItemClient returns a client for the LunchMenuItem from the given config.
-func NewLunchMenuItemClient(c config) *LunchMenuItemClient {
-	return &LunchMenuItemClient{config: c}
-}
-
-// Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `lunchmenuitem.Hooks(f(g(h())))`.
-func (c *LunchMenuItemClient) Use(hooks ...Hook) {
-	c.hooks.LunchMenuItem = append(c.hooks.LunchMenuItem, hooks...)
-}
-
-// Create returns a builder for creating a LunchMenuItem entity.
-func (c *LunchMenuItemClient) Create() *LunchMenuItemCreate {
-	mutation := newLunchMenuItemMutation(c.config, OpCreate)
-	return &LunchMenuItemCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// CreateBulk returns a builder for creating a bulk of LunchMenuItem entities.
-func (c *LunchMenuItemClient) CreateBulk(builders ...*LunchMenuItemCreate) *LunchMenuItemCreateBulk {
-	return &LunchMenuItemCreateBulk{config: c.config, builders: builders}
-}
-
-// Update returns an update builder for LunchMenuItem.
-func (c *LunchMenuItemClient) Update() *LunchMenuItemUpdate {
-	mutation := newLunchMenuItemMutation(c.config, OpUpdate)
-	return &LunchMenuItemUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOne returns an update builder for the given entity.
-func (c *LunchMenuItemClient) UpdateOne(lmi *LunchMenuItem) *LunchMenuItemUpdateOne {
-	mutation := newLunchMenuItemMutation(c.config, OpUpdateOne, withLunchMenuItem(lmi))
-	return &LunchMenuItemUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOneID returns an update builder for the given id.
-func (c *LunchMenuItemClient) UpdateOneID(id int) *LunchMenuItemUpdateOne {
-	mutation := newLunchMenuItemMutation(c.config, OpUpdateOne, withLunchMenuItemID(id))
-	return &LunchMenuItemUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// Delete returns a delete builder for LunchMenuItem.
-func (c *LunchMenuItemClient) Delete() *LunchMenuItemDelete {
-	mutation := newLunchMenuItemMutation(c.config, OpDelete)
-	return &LunchMenuItemDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// DeleteOne returns a builder for deleting the given entity.
-func (c *LunchMenuItemClient) DeleteOne(lmi *LunchMenuItem) *LunchMenuItemDeleteOne {
-	return c.DeleteOneID(lmi.ID)
-}
-
-// DeleteOne returns a builder for deleting the given entity by its id.
-func (c *LunchMenuItemClient) DeleteOneID(id int) *LunchMenuItemDeleteOne {
-	builder := c.Delete().Where(lunchmenuitem.ID(id))
-	builder.mutation.id = &id
-	builder.mutation.op = OpDeleteOne
-	return &LunchMenuItemDeleteOne{builder}
-}
-
-// Query returns a query builder for LunchMenuItem.
-func (c *LunchMenuItemClient) Query() *LunchMenuItemQuery {
-	return &LunchMenuItemQuery{
-		config: c.config,
-	}
-}
-
-// Get returns a LunchMenuItem entity by its id.
-func (c *LunchMenuItemClient) Get(ctx context.Context, id int) (*LunchMenuItem, error) {
-	return c.Query().Where(lunchmenuitem.ID(id)).Only(ctx)
-}
-
-// GetX is like Get, but panics if an error occurs.
-func (c *LunchMenuItemClient) GetX(ctx context.Context, id int) *LunchMenuItem {
-	obj, err := c.Get(ctx, id)
-	if err != nil {
-		panic(err)
-	}
-	return obj
-}
-
-// QueryMenu queries the menu edge of a LunchMenuItem.
-func (c *LunchMenuItemClient) QueryMenu(lmi *LunchMenuItem) *LunchMenuQuery {
-	query := &LunchMenuQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
-		id := lmi.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(lunchmenuitem.Table, lunchmenuitem.FieldID, id),
-			sqlgraph.To(lunchmenu.Table, lunchmenu.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, lunchmenuitem.MenuTable, lunchmenuitem.MenuColumn),
-		)
-		fromV = sqlgraph.Neighbors(lmi.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// Hooks returns the client hooks.
-func (c *LunchMenuItemClient) Hooks() []Hook {
-	return c.hooks.LunchMenuItem
-}
-
-// ResturantClient is a client for the Resturant schema.
-type ResturantClient struct {
-	config
-}
-
-// NewResturantClient returns a client for the Resturant from the given config.
-func NewResturantClient(c config) *ResturantClient {
-	return &ResturantClient{config: c}
-}
-
-// Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `resturant.Hooks(f(g(h())))`.
-func (c *ResturantClient) Use(hooks ...Hook) {
-	c.hooks.Resturant = append(c.hooks.Resturant, hooks...)
-}
-
-// Create returns a builder for creating a Resturant entity.
-func (c *ResturantClient) Create() *ResturantCreate {
-	mutation := newResturantMutation(c.config, OpCreate)
-	return &ResturantCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// CreateBulk returns a builder for creating a bulk of Resturant entities.
-func (c *ResturantClient) CreateBulk(builders ...*ResturantCreate) *ResturantCreateBulk {
-	return &ResturantCreateBulk{config: c.config, builders: builders}
-}
-
-// Update returns an update builder for Resturant.
-func (c *ResturantClient) Update() *ResturantUpdate {
-	mutation := newResturantMutation(c.config, OpUpdate)
-	return &ResturantUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOne returns an update builder for the given entity.
-func (c *ResturantClient) UpdateOne(r *Resturant) *ResturantUpdateOne {
-	mutation := newResturantMutation(c.config, OpUpdateOne, withResturant(r))
-	return &ResturantUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOneID returns an update builder for the given id.
-func (c *ResturantClient) UpdateOneID(id int) *ResturantUpdateOne {
-	mutation := newResturantMutation(c.config, OpUpdateOne, withResturantID(id))
-	return &ResturantUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// Delete returns a delete builder for Resturant.
-func (c *ResturantClient) Delete() *ResturantDelete {
-	mutation := newResturantMutation(c.config, OpDelete)
-	return &ResturantDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// DeleteOne returns a builder for deleting the given entity.
-func (c *ResturantClient) DeleteOne(r *Resturant) *ResturantDeleteOne {
-	return c.DeleteOneID(r.ID)
-}
-
-// DeleteOne returns a builder for deleting the given entity by its id.
-func (c *ResturantClient) DeleteOneID(id int) *ResturantDeleteOne {
-	builder := c.Delete().Where(resturant.ID(id))
-	builder.mutation.id = &id
-	builder.mutation.op = OpDeleteOne
-	return &ResturantDeleteOne{builder}
-}
-
-// Query returns a query builder for Resturant.
-func (c *ResturantClient) Query() *ResturantQuery {
-	return &ResturantQuery{
-		config: c.config,
-	}
-}
-
-// Get returns a Resturant entity by its id.
-func (c *ResturantClient) Get(ctx context.Context, id int) (*Resturant, error) {
-	return c.Query().Where(resturant.ID(id)).Only(ctx)
-}
-
-// GetX is like Get, but panics if an error occurs.
-func (c *ResturantClient) GetX(ctx context.Context, id int) *Resturant {
-	obj, err := c.Get(ctx, id)
-	if err != nil {
-		panic(err)
-	}
-	return obj
-}
-
-// QueryMenu queries the menu edge of a Resturant.
-func (c *ResturantClient) QueryMenu(r *Resturant) *LunchMenuQuery {
-	query := &LunchMenuQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
-		id := r.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(resturant.Table, resturant.FieldID, id),
-			sqlgraph.To(lunchmenu.Table, lunchmenu.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, resturant.MenuTable, resturant.MenuColumn),
-		)
-		fromV = sqlgraph.Neighbors(r.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// Hooks returns the client hooks.
-func (c *ResturantClient) Hooks() []Hook {
-	return c.hooks.Resturant
 }

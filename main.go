@@ -43,7 +43,7 @@ func main() {
 
 	{
 		g := e.Group("/api")
-		g.GET("/lunch", api.TodaysLunch)
+		g.GET("/lunch/today/:resturant", api.TodaysLunch)
 	}
 
 	log.Fatal().Err(e.Start(":8080")).Msg("server exited")

@@ -12,9 +12,8 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/dtekcth/dtek-api/ent/lunchmenu"
-	"github.com/dtekcth/dtek-api/ent/lunchmenuitem"
 	"github.com/dtekcth/dtek-api/ent/predicate"
-	"github.com/dtekcth/dtek-api/ent/resturant"
+	"github.com/dtekcth/dtek-api/model"
 )
 
 // LunchMenuUpdate is the builder for updating LunchMenu entities.
@@ -30,68 +29,53 @@ func (lmu *LunchMenuUpdate) Where(ps ...predicate.LunchMenu) *LunchMenuUpdate {
 	return lmu
 }
 
+// SetUpdateTime sets the "update_time" field.
+func (lmu *LunchMenuUpdate) SetUpdateTime(t time.Time) *LunchMenuUpdate {
+	lmu.mutation.SetUpdateTime(t)
+	return lmu
+}
+
+// SetResturant sets the "resturant" field.
+func (lmu *LunchMenuUpdate) SetResturant(s string) *LunchMenuUpdate {
+	lmu.mutation.SetResturant(s)
+	return lmu
+}
+
 // SetDate sets the "date" field.
 func (lmu *LunchMenuUpdate) SetDate(t time.Time) *LunchMenuUpdate {
 	lmu.mutation.SetDate(t)
 	return lmu
 }
 
-// AddItemIDs adds the "items" edge to the LunchMenuItem entity by IDs.
-func (lmu *LunchMenuUpdate) AddItemIDs(ids ...int) *LunchMenuUpdate {
-	lmu.mutation.AddItemIDs(ids...)
+// SetLanguage sets the "language" field.
+func (lmu *LunchMenuUpdate) SetLanguage(l lunchmenu.Language) *LunchMenuUpdate {
+	lmu.mutation.SetLanguage(l)
 	return lmu
 }
 
-// AddItems adds the "items" edges to the LunchMenuItem entity.
-func (lmu *LunchMenuUpdate) AddItems(l ...*LunchMenuItem) *LunchMenuUpdate {
-	ids := make([]int, len(l))
-	for i := range l {
-		ids[i] = l[i].ID
+// SetNillableLanguage sets the "language" field if the given value is not nil.
+func (lmu *LunchMenuUpdate) SetNillableLanguage(l *lunchmenu.Language) *LunchMenuUpdate {
+	if l != nil {
+		lmu.SetLanguage(*l)
 	}
-	return lmu.AddItemIDs(ids...)
-}
-
-// SetResturantID sets the "resturant" edge to the Resturant entity by ID.
-func (lmu *LunchMenuUpdate) SetResturantID(id int) *LunchMenuUpdate {
-	lmu.mutation.SetResturantID(id)
 	return lmu
 }
 
-// SetResturant sets the "resturant" edge to the Resturant entity.
-func (lmu *LunchMenuUpdate) SetResturant(r *Resturant) *LunchMenuUpdate {
-	return lmu.SetResturantID(r.ID)
+// ClearLanguage clears the value of the "language" field.
+func (lmu *LunchMenuUpdate) ClearLanguage() *LunchMenuUpdate {
+	lmu.mutation.ClearLanguage()
+	return lmu
+}
+
+// SetMenu sets the "menu" field.
+func (lmu *LunchMenuUpdate) SetMenu(mmi []model.LunchMenuItem) *LunchMenuUpdate {
+	lmu.mutation.SetMenu(mmi)
+	return lmu
 }
 
 // Mutation returns the LunchMenuMutation object of the builder.
 func (lmu *LunchMenuUpdate) Mutation() *LunchMenuMutation {
 	return lmu.mutation
-}
-
-// ClearItems clears all "items" edges to the LunchMenuItem entity.
-func (lmu *LunchMenuUpdate) ClearItems() *LunchMenuUpdate {
-	lmu.mutation.ClearItems()
-	return lmu
-}
-
-// RemoveItemIDs removes the "items" edge to LunchMenuItem entities by IDs.
-func (lmu *LunchMenuUpdate) RemoveItemIDs(ids ...int) *LunchMenuUpdate {
-	lmu.mutation.RemoveItemIDs(ids...)
-	return lmu
-}
-
-// RemoveItems removes "items" edges to LunchMenuItem entities.
-func (lmu *LunchMenuUpdate) RemoveItems(l ...*LunchMenuItem) *LunchMenuUpdate {
-	ids := make([]int, len(l))
-	for i := range l {
-		ids[i] = l[i].ID
-	}
-	return lmu.RemoveItemIDs(ids...)
-}
-
-// ClearResturant clears the "resturant" edge to the Resturant entity.
-func (lmu *LunchMenuUpdate) ClearResturant() *LunchMenuUpdate {
-	lmu.mutation.ClearResturant()
-	return lmu
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -100,6 +84,7 @@ func (lmu *LunchMenuUpdate) Save(ctx context.Context) (int, error) {
 		err      error
 		affected int
 	)
+	lmu.defaults()
 	if len(lmu.hooks) == 0 {
 		if err = lmu.check(); err != nil {
 			return 0, err
@@ -154,10 +139,20 @@ func (lmu *LunchMenuUpdate) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (lmu *LunchMenuUpdate) defaults() {
+	if _, ok := lmu.mutation.UpdateTime(); !ok {
+		v := lunchmenu.UpdateDefaultUpdateTime()
+		lmu.mutation.SetUpdateTime(v)
+	}
+}
+
 // check runs all checks and user-defined validators on the builder.
 func (lmu *LunchMenuUpdate) check() error {
-	if _, ok := lmu.mutation.ResturantID(); lmu.mutation.ResturantCleared() && !ok {
-		return errors.New(`ent: clearing a required unique edge "LunchMenu.resturant"`)
+	if v, ok := lmu.mutation.Language(); ok {
+		if err := lunchmenu.LanguageValidator(v); err != nil {
+			return &ValidationError{Name: "language", err: fmt.Errorf(`ent: validator failed for field "LunchMenu.language": %w`, err)}
+		}
 	}
 	return nil
 }
@@ -180,6 +175,20 @@ func (lmu *LunchMenuUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
+	if value, ok := lmu.mutation.UpdateTime(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: lunchmenu.FieldUpdateTime,
+		})
+	}
+	if value, ok := lmu.mutation.Resturant(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: lunchmenu.FieldResturant,
+		})
+	}
 	if value, ok := lmu.mutation.Date(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeTime,
@@ -187,94 +196,25 @@ func (lmu *LunchMenuUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: lunchmenu.FieldDate,
 		})
 	}
-	if lmu.mutation.ItemsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   lunchmenu.ItemsTable,
-			Columns: []string{lunchmenu.ItemsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: lunchmenuitem.FieldID,
-				},
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	if value, ok := lmu.mutation.Language(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeEnum,
+			Value:  value,
+			Column: lunchmenu.FieldLanguage,
+		})
 	}
-	if nodes := lmu.mutation.RemovedItemsIDs(); len(nodes) > 0 && !lmu.mutation.ItemsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   lunchmenu.ItemsTable,
-			Columns: []string{lunchmenu.ItemsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: lunchmenuitem.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	if lmu.mutation.LanguageCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeEnum,
+			Column: lunchmenu.FieldLanguage,
+		})
 	}
-	if nodes := lmu.mutation.ItemsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   lunchmenu.ItemsTable,
-			Columns: []string{lunchmenu.ItemsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: lunchmenuitem.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if lmu.mutation.ResturantCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   lunchmenu.ResturantTable,
-			Columns: []string{lunchmenu.ResturantColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: resturant.FieldID,
-				},
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := lmu.mutation.ResturantIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   lunchmenu.ResturantTable,
-			Columns: []string{lunchmenu.ResturantColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: resturant.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	if value, ok := lmu.mutation.Menu(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeJSON,
+			Value:  value,
+			Column: lunchmenu.FieldMenu,
+		})
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, lmu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -295,68 +235,53 @@ type LunchMenuUpdateOne struct {
 	mutation *LunchMenuMutation
 }
 
+// SetUpdateTime sets the "update_time" field.
+func (lmuo *LunchMenuUpdateOne) SetUpdateTime(t time.Time) *LunchMenuUpdateOne {
+	lmuo.mutation.SetUpdateTime(t)
+	return lmuo
+}
+
+// SetResturant sets the "resturant" field.
+func (lmuo *LunchMenuUpdateOne) SetResturant(s string) *LunchMenuUpdateOne {
+	lmuo.mutation.SetResturant(s)
+	return lmuo
+}
+
 // SetDate sets the "date" field.
 func (lmuo *LunchMenuUpdateOne) SetDate(t time.Time) *LunchMenuUpdateOne {
 	lmuo.mutation.SetDate(t)
 	return lmuo
 }
 
-// AddItemIDs adds the "items" edge to the LunchMenuItem entity by IDs.
-func (lmuo *LunchMenuUpdateOne) AddItemIDs(ids ...int) *LunchMenuUpdateOne {
-	lmuo.mutation.AddItemIDs(ids...)
+// SetLanguage sets the "language" field.
+func (lmuo *LunchMenuUpdateOne) SetLanguage(l lunchmenu.Language) *LunchMenuUpdateOne {
+	lmuo.mutation.SetLanguage(l)
 	return lmuo
 }
 
-// AddItems adds the "items" edges to the LunchMenuItem entity.
-func (lmuo *LunchMenuUpdateOne) AddItems(l ...*LunchMenuItem) *LunchMenuUpdateOne {
-	ids := make([]int, len(l))
-	for i := range l {
-		ids[i] = l[i].ID
+// SetNillableLanguage sets the "language" field if the given value is not nil.
+func (lmuo *LunchMenuUpdateOne) SetNillableLanguage(l *lunchmenu.Language) *LunchMenuUpdateOne {
+	if l != nil {
+		lmuo.SetLanguage(*l)
 	}
-	return lmuo.AddItemIDs(ids...)
-}
-
-// SetResturantID sets the "resturant" edge to the Resturant entity by ID.
-func (lmuo *LunchMenuUpdateOne) SetResturantID(id int) *LunchMenuUpdateOne {
-	lmuo.mutation.SetResturantID(id)
 	return lmuo
 }
 
-// SetResturant sets the "resturant" edge to the Resturant entity.
-func (lmuo *LunchMenuUpdateOne) SetResturant(r *Resturant) *LunchMenuUpdateOne {
-	return lmuo.SetResturantID(r.ID)
+// ClearLanguage clears the value of the "language" field.
+func (lmuo *LunchMenuUpdateOne) ClearLanguage() *LunchMenuUpdateOne {
+	lmuo.mutation.ClearLanguage()
+	return lmuo
+}
+
+// SetMenu sets the "menu" field.
+func (lmuo *LunchMenuUpdateOne) SetMenu(mmi []model.LunchMenuItem) *LunchMenuUpdateOne {
+	lmuo.mutation.SetMenu(mmi)
+	return lmuo
 }
 
 // Mutation returns the LunchMenuMutation object of the builder.
 func (lmuo *LunchMenuUpdateOne) Mutation() *LunchMenuMutation {
 	return lmuo.mutation
-}
-
-// ClearItems clears all "items" edges to the LunchMenuItem entity.
-func (lmuo *LunchMenuUpdateOne) ClearItems() *LunchMenuUpdateOne {
-	lmuo.mutation.ClearItems()
-	return lmuo
-}
-
-// RemoveItemIDs removes the "items" edge to LunchMenuItem entities by IDs.
-func (lmuo *LunchMenuUpdateOne) RemoveItemIDs(ids ...int) *LunchMenuUpdateOne {
-	lmuo.mutation.RemoveItemIDs(ids...)
-	return lmuo
-}
-
-// RemoveItems removes "items" edges to LunchMenuItem entities.
-func (lmuo *LunchMenuUpdateOne) RemoveItems(l ...*LunchMenuItem) *LunchMenuUpdateOne {
-	ids := make([]int, len(l))
-	for i := range l {
-		ids[i] = l[i].ID
-	}
-	return lmuo.RemoveItemIDs(ids...)
-}
-
-// ClearResturant clears the "resturant" edge to the Resturant entity.
-func (lmuo *LunchMenuUpdateOne) ClearResturant() *LunchMenuUpdateOne {
-	lmuo.mutation.ClearResturant()
-	return lmuo
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
@@ -372,6 +297,7 @@ func (lmuo *LunchMenuUpdateOne) Save(ctx context.Context) (*LunchMenu, error) {
 		err  error
 		node *LunchMenu
 	)
+	lmuo.defaults()
 	if len(lmuo.hooks) == 0 {
 		if err = lmuo.check(); err != nil {
 			return nil, err
@@ -432,10 +358,20 @@ func (lmuo *LunchMenuUpdateOne) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (lmuo *LunchMenuUpdateOne) defaults() {
+	if _, ok := lmuo.mutation.UpdateTime(); !ok {
+		v := lunchmenu.UpdateDefaultUpdateTime()
+		lmuo.mutation.SetUpdateTime(v)
+	}
+}
+
 // check runs all checks and user-defined validators on the builder.
 func (lmuo *LunchMenuUpdateOne) check() error {
-	if _, ok := lmuo.mutation.ResturantID(); lmuo.mutation.ResturantCleared() && !ok {
-		return errors.New(`ent: clearing a required unique edge "LunchMenu.resturant"`)
+	if v, ok := lmuo.mutation.Language(); ok {
+		if err := lunchmenu.LanguageValidator(v); err != nil {
+			return &ValidationError{Name: "language", err: fmt.Errorf(`ent: validator failed for field "LunchMenu.language": %w`, err)}
+		}
 	}
 	return nil
 }
@@ -475,6 +411,20 @@ func (lmuo *LunchMenuUpdateOne) sqlSave(ctx context.Context) (_node *LunchMenu, 
 			}
 		}
 	}
+	if value, ok := lmuo.mutation.UpdateTime(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: lunchmenu.FieldUpdateTime,
+		})
+	}
+	if value, ok := lmuo.mutation.Resturant(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: lunchmenu.FieldResturant,
+		})
+	}
 	if value, ok := lmuo.mutation.Date(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeTime,
@@ -482,94 +432,25 @@ func (lmuo *LunchMenuUpdateOne) sqlSave(ctx context.Context) (_node *LunchMenu, 
 			Column: lunchmenu.FieldDate,
 		})
 	}
-	if lmuo.mutation.ItemsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   lunchmenu.ItemsTable,
-			Columns: []string{lunchmenu.ItemsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: lunchmenuitem.FieldID,
-				},
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	if value, ok := lmuo.mutation.Language(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeEnum,
+			Value:  value,
+			Column: lunchmenu.FieldLanguage,
+		})
 	}
-	if nodes := lmuo.mutation.RemovedItemsIDs(); len(nodes) > 0 && !lmuo.mutation.ItemsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   lunchmenu.ItemsTable,
-			Columns: []string{lunchmenu.ItemsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: lunchmenuitem.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	if lmuo.mutation.LanguageCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeEnum,
+			Column: lunchmenu.FieldLanguage,
+		})
 	}
-	if nodes := lmuo.mutation.ItemsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   lunchmenu.ItemsTable,
-			Columns: []string{lunchmenu.ItemsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: lunchmenuitem.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if lmuo.mutation.ResturantCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   lunchmenu.ResturantTable,
-			Columns: []string{lunchmenu.ResturantColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: resturant.FieldID,
-				},
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := lmuo.mutation.ResturantIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   lunchmenu.ResturantTable,
-			Columns: []string{lunchmenu.ResturantColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: resturant.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	if value, ok := lmuo.mutation.Menu(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeJSON,
+			Value:  value,
+			Column: lunchmenu.FieldMenu,
+		})
 	}
 	_node = &LunchMenu{config: lmuo.config}
 	_spec.Assign = _node.assignValues

@@ -3,13 +3,14 @@
 package ent
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"github.com/dtekcth/dtek-api/ent/lunchmenu"
-	"github.com/dtekcth/dtek-api/ent/resturant"
+	"github.com/dtekcth/dtek-api/model"
 )
 
 // LunchMenu is the model entity for the LunchMenu schema.
@@ -17,46 +18,16 @@ type LunchMenu struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
+	// UpdateTime holds the value of the "update_time" field.
+	UpdateTime time.Time `json:"update_time,omitempty"`
+	// Resturant holds the value of the "resturant" field.
+	Resturant string `json:"resturant,omitempty"`
 	// Date holds the value of the "date" field.
 	Date time.Time `json:"date,omitempty"`
-	// Edges holds the relations/edges for other nodes in the graph.
-	// The values are being populated by the LunchMenuQuery when eager-loading is set.
-	Edges          LunchMenuEdges `json:"edges"`
-	resturant_menu *int
-}
-
-// LunchMenuEdges holds the relations/edges for other nodes in the graph.
-type LunchMenuEdges struct {
-	// Items holds the value of the items edge.
-	Items []*LunchMenuItem `json:"items,omitempty"`
-	// Resturant holds the value of the resturant edge.
-	Resturant *Resturant `json:"resturant,omitempty"`
-	// loadedTypes holds the information for reporting if a
-	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
-}
-
-// ItemsOrErr returns the Items value or an error if the edge
-// was not loaded in eager-loading.
-func (e LunchMenuEdges) ItemsOrErr() ([]*LunchMenuItem, error) {
-	if e.loadedTypes[0] {
-		return e.Items, nil
-	}
-	return nil, &NotLoadedError{edge: "items"}
-}
-
-// ResturantOrErr returns the Resturant value or an error if the edge
-// was not loaded in eager-loading, or loaded but was not found.
-func (e LunchMenuEdges) ResturantOrErr() (*Resturant, error) {
-	if e.loadedTypes[1] {
-		if e.Resturant == nil {
-			// The edge resturant was loaded in eager-loading,
-			// but was not found.
-			return nil, &NotFoundError{label: resturant.Label}
-		}
-		return e.Resturant, nil
-	}
-	return nil, &NotLoadedError{edge: "resturant"}
+	// Language holds the value of the "language" field.
+	Language lunchmenu.Language `json:"language,omitempty"`
+	// Menu holds the value of the "menu" field.
+	Menu []model.LunchMenuItem `json:"menu,omitempty"`
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -64,12 +35,14 @@ func (*LunchMenu) scanValues(columns []string) ([]interface{}, error) {
 	values := make([]interface{}, len(columns))
 	for i := range columns {
 		switch columns[i] {
+		case lunchmenu.FieldMenu:
+			values[i] = new([]byte)
 		case lunchmenu.FieldID:
 			values[i] = new(sql.NullInt64)
-		case lunchmenu.FieldDate:
+		case lunchmenu.FieldResturant, lunchmenu.FieldLanguage:
+			values[i] = new(sql.NullString)
+		case lunchmenu.FieldUpdateTime, lunchmenu.FieldDate:
 			values[i] = new(sql.NullTime)
-		case lunchmenu.ForeignKeys[0]: // resturant_menu
-			values[i] = new(sql.NullInt64)
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type LunchMenu", columns[i])
 		}
@@ -91,32 +64,41 @@ func (lm *LunchMenu) assignValues(columns []string, values []interface{}) error 
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
 			lm.ID = int(value.Int64)
+		case lunchmenu.FieldUpdateTime:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field update_time", values[i])
+			} else if value.Valid {
+				lm.UpdateTime = value.Time
+			}
+		case lunchmenu.FieldResturant:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field resturant", values[i])
+			} else if value.Valid {
+				lm.Resturant = value.String
+			}
 		case lunchmenu.FieldDate:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field date", values[i])
 			} else if value.Valid {
 				lm.Date = value.Time
 			}
-		case lunchmenu.ForeignKeys[0]:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for edge-field resturant_menu", value)
+		case lunchmenu.FieldLanguage:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field language", values[i])
 			} else if value.Valid {
-				lm.resturant_menu = new(int)
-				*lm.resturant_menu = int(value.Int64)
+				lm.Language = lunchmenu.Language(value.String)
+			}
+		case lunchmenu.FieldMenu:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field menu", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &lm.Menu); err != nil {
+					return fmt.Errorf("unmarshal field menu: %w", err)
+				}
 			}
 		}
 	}
 	return nil
-}
-
-// QueryItems queries the "items" edge of the LunchMenu entity.
-func (lm *LunchMenu) QueryItems() *LunchMenuItemQuery {
-	return (&LunchMenuClient{config: lm.config}).QueryItems(lm)
-}
-
-// QueryResturant queries the "resturant" edge of the LunchMenu entity.
-func (lm *LunchMenu) QueryResturant() *ResturantQuery {
-	return (&LunchMenuClient{config: lm.config}).QueryResturant(lm)
 }
 
 // Update returns a builder for updating this LunchMenu.
@@ -142,8 +124,20 @@ func (lm *LunchMenu) String() string {
 	var builder strings.Builder
 	builder.WriteString("LunchMenu(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", lm.ID))
+	builder.WriteString("update_time=")
+	builder.WriteString(lm.UpdateTime.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("resturant=")
+	builder.WriteString(lm.Resturant)
+	builder.WriteString(", ")
 	builder.WriteString("date=")
 	builder.WriteString(lm.Date.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("language=")
+	builder.WriteString(fmt.Sprintf("%v", lm.Language))
+	builder.WriteString(", ")
+	builder.WriteString("menu=")
+	builder.WriteString(fmt.Sprintf("%v", lm.Menu))
 	builder.WriteByte(')')
 	return builder.String()
 }

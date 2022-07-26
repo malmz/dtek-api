@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
-	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/dtekcth/dtek-api/ent/predicate"
 )
 
@@ -81,10 +80,211 @@ func IDLTE(id int) predicate.LunchMenu {
 	})
 }
 
+// UpdateTime applies equality check predicate on the "update_time" field. It's identical to UpdateTimeEQ.
+func UpdateTime(v time.Time) predicate.LunchMenu {
+	return predicate.LunchMenu(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldUpdateTime), v))
+	})
+}
+
+// Resturant applies equality check predicate on the "resturant" field. It's identical to ResturantEQ.
+func Resturant(v string) predicate.LunchMenu {
+	return predicate.LunchMenu(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldResturant), v))
+	})
+}
+
 // Date applies equality check predicate on the "date" field. It's identical to DateEQ.
 func Date(v time.Time) predicate.LunchMenu {
 	return predicate.LunchMenu(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldDate), v))
+	})
+}
+
+// UpdateTimeEQ applies the EQ predicate on the "update_time" field.
+func UpdateTimeEQ(v time.Time) predicate.LunchMenu {
+	return predicate.LunchMenu(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldUpdateTime), v))
+	})
+}
+
+// UpdateTimeNEQ applies the NEQ predicate on the "update_time" field.
+func UpdateTimeNEQ(v time.Time) predicate.LunchMenu {
+	return predicate.LunchMenu(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldUpdateTime), v))
+	})
+}
+
+// UpdateTimeIn applies the In predicate on the "update_time" field.
+func UpdateTimeIn(vs ...time.Time) predicate.LunchMenu {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.LunchMenu(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldUpdateTime), v...))
+	})
+}
+
+// UpdateTimeNotIn applies the NotIn predicate on the "update_time" field.
+func UpdateTimeNotIn(vs ...time.Time) predicate.LunchMenu {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.LunchMenu(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldUpdateTime), v...))
+	})
+}
+
+// UpdateTimeGT applies the GT predicate on the "update_time" field.
+func UpdateTimeGT(v time.Time) predicate.LunchMenu {
+	return predicate.LunchMenu(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldUpdateTime), v))
+	})
+}
+
+// UpdateTimeGTE applies the GTE predicate on the "update_time" field.
+func UpdateTimeGTE(v time.Time) predicate.LunchMenu {
+	return predicate.LunchMenu(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldUpdateTime), v))
+	})
+}
+
+// UpdateTimeLT applies the LT predicate on the "update_time" field.
+func UpdateTimeLT(v time.Time) predicate.LunchMenu {
+	return predicate.LunchMenu(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldUpdateTime), v))
+	})
+}
+
+// UpdateTimeLTE applies the LTE predicate on the "update_time" field.
+func UpdateTimeLTE(v time.Time) predicate.LunchMenu {
+	return predicate.LunchMenu(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldUpdateTime), v))
+	})
+}
+
+// ResturantEQ applies the EQ predicate on the "resturant" field.
+func ResturantEQ(v string) predicate.LunchMenu {
+	return predicate.LunchMenu(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldResturant), v))
+	})
+}
+
+// ResturantNEQ applies the NEQ predicate on the "resturant" field.
+func ResturantNEQ(v string) predicate.LunchMenu {
+	return predicate.LunchMenu(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldResturant), v))
+	})
+}
+
+// ResturantIn applies the In predicate on the "resturant" field.
+func ResturantIn(vs ...string) predicate.LunchMenu {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.LunchMenu(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldResturant), v...))
+	})
+}
+
+// ResturantNotIn applies the NotIn predicate on the "resturant" field.
+func ResturantNotIn(vs ...string) predicate.LunchMenu {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.LunchMenu(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldResturant), v...))
+	})
+}
+
+// ResturantGT applies the GT predicate on the "resturant" field.
+func ResturantGT(v string) predicate.LunchMenu {
+	return predicate.LunchMenu(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldResturant), v))
+	})
+}
+
+// ResturantGTE applies the GTE predicate on the "resturant" field.
+func ResturantGTE(v string) predicate.LunchMenu {
+	return predicate.LunchMenu(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldResturant), v))
+	})
+}
+
+// ResturantLT applies the LT predicate on the "resturant" field.
+func ResturantLT(v string) predicate.LunchMenu {
+	return predicate.LunchMenu(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldResturant), v))
+	})
+}
+
+// ResturantLTE applies the LTE predicate on the "resturant" field.
+func ResturantLTE(v string) predicate.LunchMenu {
+	return predicate.LunchMenu(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldResturant), v))
+	})
+}
+
+// ResturantContains applies the Contains predicate on the "resturant" field.
+func ResturantContains(v string) predicate.LunchMenu {
+	return predicate.LunchMenu(func(s *sql.Selector) {
+		s.Where(sql.Contains(s.C(FieldResturant), v))
+	})
+}
+
+// ResturantHasPrefix applies the HasPrefix predicate on the "resturant" field.
+func ResturantHasPrefix(v string) predicate.LunchMenu {
+	return predicate.LunchMenu(func(s *sql.Selector) {
+		s.Where(sql.HasPrefix(s.C(FieldResturant), v))
+	})
+}
+
+// ResturantHasSuffix applies the HasSuffix predicate on the "resturant" field.
+func ResturantHasSuffix(v string) predicate.LunchMenu {
+	return predicate.LunchMenu(func(s *sql.Selector) {
+		s.Where(sql.HasSuffix(s.C(FieldResturant), v))
+	})
+}
+
+// ResturantEqualFold applies the EqualFold predicate on the "resturant" field.
+func ResturantEqualFold(v string) predicate.LunchMenu {
+	return predicate.LunchMenu(func(s *sql.Selector) {
+		s.Where(sql.EqualFold(s.C(FieldResturant), v))
+	})
+}
+
+// ResturantContainsFold applies the ContainsFold predicate on the "resturant" field.
+func ResturantContainsFold(v string) predicate.LunchMenu {
+	return predicate.LunchMenu(func(s *sql.Selector) {
+		s.Where(sql.ContainsFold(s.C(FieldResturant), v))
 	})
 }
 
@@ -164,59 +364,65 @@ func DateLTE(v time.Time) predicate.LunchMenu {
 	})
 }
 
-// HasItems applies the HasEdge predicate on the "items" edge.
-func HasItems() predicate.LunchMenu {
+// LanguageEQ applies the EQ predicate on the "language" field.
+func LanguageEQ(v Language) predicate.LunchMenu {
 	return predicate.LunchMenu(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(ItemsTable, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, ItemsTable, ItemsColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
+		s.Where(sql.EQ(s.C(FieldLanguage), v))
 	})
 }
 
-// HasItemsWith applies the HasEdge predicate on the "items" edge with a given conditions (other predicates).
-func HasItemsWith(preds ...predicate.LunchMenuItem) predicate.LunchMenu {
+// LanguageNEQ applies the NEQ predicate on the "language" field.
+func LanguageNEQ(v Language) predicate.LunchMenu {
 	return predicate.LunchMenu(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(ItemsInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, ItemsTable, ItemsColumn),
-		)
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
+		s.Where(sql.NEQ(s.C(FieldLanguage), v))
 	})
 }
 
-// HasResturant applies the HasEdge predicate on the "resturant" edge.
-func HasResturant() predicate.LunchMenu {
+// LanguageIn applies the In predicate on the "language" field.
+func LanguageIn(vs ...Language) predicate.LunchMenu {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
 	return predicate.LunchMenu(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(ResturantTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, ResturantTable, ResturantColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldLanguage), v...))
 	})
 }
 
-// HasResturantWith applies the HasEdge predicate on the "resturant" edge with a given conditions (other predicates).
-func HasResturantWith(preds ...predicate.Resturant) predicate.LunchMenu {
+// LanguageNotIn applies the NotIn predicate on the "language" field.
+func LanguageNotIn(vs ...Language) predicate.LunchMenu {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
 	return predicate.LunchMenu(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(ResturantInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, ResturantTable, ResturantColumn),
-		)
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldLanguage), v...))
+	})
+}
+
+// LanguageIsNil applies the IsNil predicate on the "language" field.
+func LanguageIsNil() predicate.LunchMenu {
+	return predicate.LunchMenu(func(s *sql.Selector) {
+		s.Where(sql.IsNull(s.C(FieldLanguage)))
+	})
+}
+
+// LanguageNotNil applies the NotNil predicate on the "language" field.
+func LanguageNotNil() predicate.LunchMenu {
+	return predicate.LunchMenu(func(s *sql.Selector) {
+		s.Where(sql.NotNull(s.C(FieldLanguage)))
 	})
 }
 

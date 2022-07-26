@@ -6,11 +6,7 @@ type Allergen struct {
 }
 
 type LunchMenu struct {
-	Resturant string          `json:"resturant"`
-	Campus    string          `json:"campus"`
-	Date      string          `json:"date"`
-	Language  string          `json:"language"`
-	Items     []LunchMenuItem `json:"items"`
+	Items []LunchMenuItem `json:"items"`
 }
 
 type LunchMenuItem struct {
