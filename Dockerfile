@@ -9,8 +9,8 @@ RUN go mod download
 
 COPY . .
 
-RUN CGO_ENABLED=0 go build -o /dtek-api
+RUN go build -o /dtek-api
 
-FROM gcr.io/distroless/static-debian11
+FROM gcr.io/distroless/base-debian11
 COPY --from=build /dtek-api /
 CMD ["/dtek-api"]
