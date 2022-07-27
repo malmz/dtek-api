@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM docker.io/golang:1.18-alpine AS build
+FROM docker.io/golang:1.18 AS build
 WORKDIR /app
 
 COPY go.mod ./
