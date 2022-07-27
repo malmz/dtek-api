@@ -6,7 +6,7 @@ require (
 	entgo.io/ent v0.11.1
 	github.com/labstack/echo/v4 v4.7.2
 	github.com/ledongthuc/pdf v0.0.0-20220302134840-0c2507a12d80
-	github.com/mattn/go-sqlite3 v1.14.13
+	github.com/lib/pq v1.10.6
 	github.com/rs/zerolog v1.27.0
 )
 
