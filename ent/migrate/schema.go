@@ -15,6 +15,7 @@ var (
 		{Name: "resturant", Type: field.TypeString},
 		{Name: "date", Type: field.TypeTime},
 		{Name: "language", Type: field.TypeEnum, Nullable: true, Enums: []string{"se", "en"}},
+		{Name: "name", Type: field.TypeString},
 		{Name: "menu", Type: field.TypeJSON},
 	}
 	// LunchMenusTable holds the schema information for the "lunch_menus" table.
@@ -30,9 +31,24 @@ var (
 			},
 		},
 	}
+	// NewsColumns holds the columns for the "news" table.
+	NewsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "create_time", Type: field.TypeTime},
+		{Name: "update_time", Type: field.TypeTime},
+		{Name: "title", Type: field.TypeString},
+		{Name: "content", Type: field.TypeString},
+	}
+	// NewsTable holds the schema information for the "news" table.
+	NewsTable = &schema.Table{
+		Name:       "news",
+		Columns:    NewsColumns,
+		PrimaryKey: []*schema.Column{NewsColumns[0]},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		LunchMenusTable,
+		NewsTable,
 	}
 )
 

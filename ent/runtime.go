@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/dtekcth/dtek-api/ent/lunchmenu"
+	"github.com/dtekcth/dtek-api/ent/news"
 	"github.com/dtekcth/dtek-api/ent/schema"
 )
 
@@ -24,4 +25,19 @@ func init() {
 	lunchmenu.DefaultUpdateTime = lunchmenuDescUpdateTime.Default.(func() time.Time)
 	// lunchmenu.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
 	lunchmenu.UpdateDefaultUpdateTime = lunchmenuDescUpdateTime.UpdateDefault.(func() time.Time)
+	newsMixin := schema.News{}.Mixin()
+	newsMixinFields0 := newsMixin[0].Fields()
+	_ = newsMixinFields0
+	newsFields := schema.News{}.Fields()
+	_ = newsFields
+	// newsDescCreateTime is the schema descriptor for create_time field.
+	newsDescCreateTime := newsMixinFields0[0].Descriptor()
+	// news.DefaultCreateTime holds the default value on creation for the create_time field.
+	news.DefaultCreateTime = newsDescCreateTime.Default.(func() time.Time)
+	// newsDescUpdateTime is the schema descriptor for update_time field.
+	newsDescUpdateTime := newsMixinFields0[1].Descriptor()
+	// news.DefaultUpdateTime holds the default value on creation for the update_time field.
+	news.DefaultUpdateTime = newsDescUpdateTime.Default.(func() time.Time)
+	// news.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
+	news.UpdateDefaultUpdateTime = newsDescUpdateTime.UpdateDefault.(func() time.Time)
 }

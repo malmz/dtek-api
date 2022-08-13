@@ -19,6 +19,7 @@ func (LunchMenu) Fields() []ent.Field {
 		field.String("resturant"),
 		field.Time("date"),
 		field.Enum("language").Values("se", "en").Optional(),
+		field.String("name"),
 		field.JSON("menu", []model.LunchMenuItem{}),
 	}
 }

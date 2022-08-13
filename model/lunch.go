@@ -1,12 +1,16 @@
 package model
 
+import "time"
+
 type Allergen struct {
 	Code     string `json:"code"`
 	ImageUrl string `json:"imageUrl"`
 }
 
 type LunchMenu struct {
-	Items []LunchMenuItem `json:"items"`
+	Name      string          `json:"name"`
+	FetchedAt time.Time       `json:"fetched_at"`
+	Items     []LunchMenuItem `json:"items"`
 }
 
 type LunchMenuItem struct {

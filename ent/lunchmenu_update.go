@@ -67,6 +67,12 @@ func (lmu *LunchMenuUpdate) ClearLanguage() *LunchMenuUpdate {
 	return lmu
 }
 
+// SetName sets the "name" field.
+func (lmu *LunchMenuUpdate) SetName(s string) *LunchMenuUpdate {
+	lmu.mutation.SetName(s)
+	return lmu
+}
+
 // SetMenu sets the "menu" field.
 func (lmu *LunchMenuUpdate) SetMenu(mmi []model.LunchMenuItem) *LunchMenuUpdate {
 	lmu.mutation.SetMenu(mmi)
@@ -209,6 +215,13 @@ func (lmu *LunchMenuUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: lunchmenu.FieldLanguage,
 		})
 	}
+	if value, ok := lmu.mutation.Name(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: lunchmenu.FieldName,
+		})
+	}
 	if value, ok := lmu.mutation.Menu(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeJSON,
@@ -270,6 +283,12 @@ func (lmuo *LunchMenuUpdateOne) SetNillableLanguage(l *lunchmenu.Language) *Lunc
 // ClearLanguage clears the value of the "language" field.
 func (lmuo *LunchMenuUpdateOne) ClearLanguage() *LunchMenuUpdateOne {
 	lmuo.mutation.ClearLanguage()
+	return lmuo
+}
+
+// SetName sets the "name" field.
+func (lmuo *LunchMenuUpdateOne) SetName(s string) *LunchMenuUpdateOne {
+	lmuo.mutation.SetName(s)
 	return lmuo
 }
 
@@ -443,6 +462,13 @@ func (lmuo *LunchMenuUpdateOne) sqlSave(ctx context.Context) (_node *LunchMenu, 
 		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
 			Type:   field.TypeEnum,
 			Column: lunchmenu.FieldLanguage,
+		})
+	}
+	if value, ok := lmuo.mutation.Name(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: lunchmenu.FieldName,
 		})
 	}
 	if value, ok := lmuo.mutation.Menu(); ok {

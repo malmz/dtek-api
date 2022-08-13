@@ -20,6 +20,8 @@ const (
 	FieldDate = "date"
 	// FieldLanguage holds the string denoting the language field in the database.
 	FieldLanguage = "language"
+	// FieldName holds the string denoting the name field in the database.
+	FieldName = "name"
 	// FieldMenu holds the string denoting the menu field in the database.
 	FieldMenu = "menu"
 	// Table holds the table name of the lunchmenu in the database.
@@ -33,6 +35,7 @@ var Columns = []string{
 	FieldResturant,
 	FieldDate,
 	FieldLanguage,
+	FieldName,
 	FieldMenu,
 }
 

@@ -10,6 +10,7 @@ import (
 	"github.com/dtekcth/dtek-api/ent/migrate"
 
 	"github.com/dtekcth/dtek-api/ent/lunchmenu"
+	"github.com/dtekcth/dtek-api/ent/news"
 
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
@@ -22,6 +23,8 @@ type Client struct {
 	Schema *migrate.Schema
 	// LunchMenu is the client for interacting with the LunchMenu builders.
 	LunchMenu *LunchMenuClient
+	// News is the client for interacting with the News builders.
+	News *NewsClient
 }
 
 // NewClient creates a new client configured with the given options.
@@ -36,6 +39,7 @@ func NewClient(opts ...Option) *Client {
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.LunchMenu = NewLunchMenuClient(c.config)
+	c.News = NewNewsClient(c.config)
 }
 
 // Open opens a database/sql.DB specified by the driver name and
@@ -70,6 +74,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		ctx:       ctx,
 		config:    cfg,
 		LunchMenu: NewLunchMenuClient(cfg),
+		News:      NewNewsClient(cfg),
 	}, nil
 }
 
@@ -90,6 +95,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		ctx:       ctx,
 		config:    cfg,
 		LunchMenu: NewLunchMenuClient(cfg),
+		News:      NewNewsClient(cfg),
 	}, nil
 }
 
@@ -120,6 +126,7 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	c.LunchMenu.Use(hooks...)
+	c.News.Use(hooks...)
 }
 
 // LunchMenuClient is a client for the LunchMenu schema.
@@ -210,4 +217,94 @@ func (c *LunchMenuClient) GetX(ctx context.Context, id int) *LunchMenu {
 // Hooks returns the client hooks.
 func (c *LunchMenuClient) Hooks() []Hook {
 	return c.hooks.LunchMenu
+}
+
+// NewsClient is a client for the News schema.
+type NewsClient struct {
+	config
+}
+
+// NewNewsClient returns a client for the News from the given config.
+func NewNewsClient(c config) *NewsClient {
+	return &NewsClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `news.Hooks(f(g(h())))`.
+func (c *NewsClient) Use(hooks ...Hook) {
+	c.hooks.News = append(c.hooks.News, hooks...)
+}
+
+// Create returns a builder for creating a News entity.
+func (c *NewsClient) Create() *NewsCreate {
+	mutation := newNewsMutation(c.config, OpCreate)
+	return &NewsCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of News entities.
+func (c *NewsClient) CreateBulk(builders ...*NewsCreate) *NewsCreateBulk {
+	return &NewsCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for News.
+func (c *NewsClient) Update() *NewsUpdate {
+	mutation := newNewsMutation(c.config, OpUpdate)
+	return &NewsUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *NewsClient) UpdateOne(n *News) *NewsUpdateOne {
+	mutation := newNewsMutation(c.config, OpUpdateOne, withNews(n))
+	return &NewsUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *NewsClient) UpdateOneID(id int) *NewsUpdateOne {
+	mutation := newNewsMutation(c.config, OpUpdateOne, withNewsID(id))
+	return &NewsUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for News.
+func (c *NewsClient) Delete() *NewsDelete {
+	mutation := newNewsMutation(c.config, OpDelete)
+	return &NewsDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *NewsClient) DeleteOne(n *News) *NewsDeleteOne {
+	return c.DeleteOneID(n.ID)
+}
+
+// DeleteOne returns a builder for deleting the given entity by its id.
+func (c *NewsClient) DeleteOneID(id int) *NewsDeleteOne {
+	builder := c.Delete().Where(news.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &NewsDeleteOne{builder}
+}
+
+// Query returns a query builder for News.
+func (c *NewsClient) Query() *NewsQuery {
+	return &NewsQuery{
+		config: c.config,
+	}
+}
+
+// Get returns a News entity by its id.
+func (c *NewsClient) Get(ctx context.Context, id int) (*News, error) {
+	return c.Query().Where(news.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *NewsClient) GetX(ctx context.Context, id int) *News {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *NewsClient) Hooks() []Hook {
+	return c.hooks.News
 }

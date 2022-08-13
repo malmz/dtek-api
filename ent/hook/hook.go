@@ -22,6 +22,19 @@ func (f LunchMenuFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, e
 	return f(ctx, mv)
 }
 
+// The NewsFunc type is an adapter to allow the use of ordinary
+// function as News mutator.
+type NewsFunc func(context.Context, *ent.NewsMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f NewsFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	mv, ok := m.(*ent.NewsMutation)
+	if !ok {
+		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.NewsMutation", m)
+	}
+	return f(ctx, mv)
+}
+
 // Condition is a hook condition function.
 type Condition func(context.Context, ent.Mutation) bool
 

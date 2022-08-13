@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/dtekcth/dtek-api/ent/lunchmenu"
+	"github.com/dtekcth/dtek-api/ent/news"
 )
 
 // ent aliases to avoid import conflicts in user's code.
@@ -32,6 +33,7 @@ type OrderFunc func(*sql.Selector)
 func columnChecker(table string) func(string) error {
 	checks := map[string]func(string) bool{
 		lunchmenu.Table: lunchmenu.ValidColumn,
+		news.Table:      news.ValidColumn,
 	}
 	check, ok := checks[table]
 	if !ok {

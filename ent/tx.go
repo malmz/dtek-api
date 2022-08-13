@@ -14,6 +14,8 @@ type Tx struct {
 	config
 	// LunchMenu is the client for interacting with the LunchMenu builders.
 	LunchMenu *LunchMenuClient
+	// News is the client for interacting with the News builders.
+	News *NewsClient
 
 	// lazily loaded.
 	client     *Client
@@ -150,6 +152,7 @@ func (tx *Tx) Client() *Client {
 
 func (tx *Tx) init() {
 	tx.LunchMenu = NewLunchMenuClient(tx.config)
+	tx.News = NewNewsClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.

@@ -72,6 +72,7 @@ func parseLinsenPdf(data []byte) ([]model.LunchMenu, error) {
 		if dayMatch != nil {
 
 			menu = append(menu, model.LunchMenu{
+				Name: "Linsen",
 				Items: []model.LunchMenuItem{
 					{
 						Body:         builder.String(),

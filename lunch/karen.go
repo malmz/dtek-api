@@ -2,12 +2,14 @@ package lunch
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"time"
 
 	"github.com/dtekcth/dtek-api/model"
+	"github.com/go-playground/validator/v10"
 	"github.com/rs/zerolog/log"
 )
 
@@ -29,34 +31,36 @@ func (t *FreedomTime) UnmarshalJSON(data []byte) error {
 }
 
 type DishOccurrence struct {
-	StartDate FreedomTime `json:"startDate"`
-	EndDate   FreedomTime `json:"endDate"`
+	StartDate FreedomTime `json:"startDate" validate:"required"`
+	EndDate   FreedomTime `json:"endDate" validate:"required"`
 	Resturant struct {
-		Name string `json:"mealProvidingUnitName"`
-	} `json:"mealProvidingUnit"`
+		Name string `json:"mealProvidingUnitName" validate:"required"`
+	} `json:"mealProvidingUnit" validate:"required"`
 	DishBody []struct {
-		Text     string `json:"dishDisplayName"`
+		Text     string `json:"dishDisplayName" validate:"required"`
 		Category struct {
-			Name string `json:"displayNameCategoryName"`
-		} `json:"displayNameCategory"`
-	} `json:"displayNames"`
-	Title struct {
-		Swedish string `json:"dishTypeName"`
-		English string `json:"dishTypeNameEnglish"`
+			Name string `json:"displayNameCategoryName" validate:"required"`
+		} `json:"displayNameCategory" validate:"required"`
+	} `json:"displayNames" validate:"required"`
+	Title *struct {
+		Swedish string `json:"dishTypeName" validate:"required"`
+		English string `json:"dishTypeNameEnglish" validate:"required"`
 	} `json:"dishType"`
 	DishInfo struct {
-		Emission float64 `json:"totalEmission"`
-		Price    string  `json:"prices"`
+		Emission float64 `json:"totalEmission" validate:"required"`
+		Price    string  `json:"prices" validate:"required"`
 		Recipes  []struct {
 			Allergens []struct {
-				Code string `json:"allergenCode"`
-				Url  string `json:"allergenUrl"`
+				Code string `json:"allergenCode" validate:"required"`
+				Url  string `json:"allergenUrl" validate:"required"`
 			} `json:"allergens"`
-		} `json:"recipes"`
+		} `json:"recipes" validate:"gt=0"`
 	}
 }
 
 const baseUrl = "http://carbonateapiprod.azurewebsites.net/api/v1/mealprovidingunits"
+
+var validate = validator.New()
 
 func fetchKarenApi(id string, startDate time.Time, endDate time.Time) ([]DishOccurrence, error) {
 	url := fmt.Sprintf("%s/%s/dishoccurrences?startDate=%s&endDate=%s", baseUrl, id, startDate.Format("2006-01-02"), endDate.Format("2006-01-02"))
@@ -80,6 +84,7 @@ func fetchKarenApi(id string, startDate time.Time, endDate time.Time) ([]DishOcc
 		log.Error().Err(err).Str("id", id).Msg("failed to unmarshal menu")
 		return nil, err
 	}
+	validate.Struct(dishes)
 	return dishes, nil
 }
 
@@ -99,12 +104,18 @@ func (f *KarenFetcher) Fetch(date time.Time, lang string) (*model.LunchMenu, err
 		return nil, err
 	}
 
+	if len(dishes) == 0 {
+		return nil, errors.New("no dishes found")
+	}
+
 	var language string
 	if lang == "en" {
 		language = "English"
 	} else {
 		language = "Swedish"
 	}
+
+	name := dishes[0].Resturant.Name
 
 	items := make([]model.LunchMenuItem, len(dishes))
 
@@ -116,10 +127,12 @@ func (f *KarenFetcher) Fetch(date time.Time, lang string) (*model.LunchMenu, err
 				break
 			}
 		}
-		if lang == "en" {
-			title = dish.Title.English
-		} else {
-			title = dish.Title.Swedish
+		if dish.Title != nil {
+			if lang == "en" {
+				title = dish.Title.English
+			} else {
+				title = dish.Title.Swedish
+			}
 		}
 
 		allergens := make([]model.Allergen, len(dish.DishInfo.Recipes[0].Allergens))
@@ -141,6 +154,7 @@ func (f *KarenFetcher) Fetch(date time.Time, lang string) (*model.LunchMenu, err
 	}
 
 	return &model.LunchMenu{
+		Name:  name,
 		Items: items,
 	}, nil
 }

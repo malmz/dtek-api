@@ -26,6 +26,8 @@ type LunchMenu struct {
 	Date time.Time `json:"date,omitempty"`
 	// Language holds the value of the "language" field.
 	Language lunchmenu.Language `json:"language,omitempty"`
+	// Name holds the value of the "name" field.
+	Name string `json:"name,omitempty"`
 	// Menu holds the value of the "menu" field.
 	Menu []model.LunchMenuItem `json:"menu,omitempty"`
 }
@@ -39,7 +41,7 @@ func (*LunchMenu) scanValues(columns []string) ([]interface{}, error) {
 			values[i] = new([]byte)
 		case lunchmenu.FieldID:
 			values[i] = new(sql.NullInt64)
-		case lunchmenu.FieldResturant, lunchmenu.FieldLanguage:
+		case lunchmenu.FieldResturant, lunchmenu.FieldLanguage, lunchmenu.FieldName:
 			values[i] = new(sql.NullString)
 		case lunchmenu.FieldUpdateTime, lunchmenu.FieldDate:
 			values[i] = new(sql.NullTime)
@@ -88,6 +90,12 @@ func (lm *LunchMenu) assignValues(columns []string, values []interface{}) error 
 			} else if value.Valid {
 				lm.Language = lunchmenu.Language(value.String)
 			}
+		case lunchmenu.FieldName:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field name", values[i])
+			} else if value.Valid {
+				lm.Name = value.String
+			}
 		case lunchmenu.FieldMenu:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field menu", values[i])
@@ -135,6 +143,9 @@ func (lm *LunchMenu) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("language=")
 	builder.WriteString(fmt.Sprintf("%v", lm.Language))
+	builder.WriteString(", ")
+	builder.WriteString("name=")
+	builder.WriteString(lm.Name)
 	builder.WriteString(", ")
 	builder.WriteString("menu=")
 	builder.WriteString(fmt.Sprintf("%v", lm.Menu))

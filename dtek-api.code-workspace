@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../dtek-svelte"
+		},
+		{
+			"path": "../deploy"
+		}
+	],
+	"settings": {}
+}

@@ -61,6 +61,12 @@ func (lmc *LunchMenuCreate) SetNillableLanguage(l *lunchmenu.Language) *LunchMen
 	return lmc
 }
 
+// SetName sets the "name" field.
+func (lmc *LunchMenuCreate) SetName(s string) *LunchMenuCreate {
+	lmc.mutation.SetName(s)
+	return lmc
+}
+
 // SetMenu sets the "menu" field.
 func (lmc *LunchMenuCreate) SetMenu(mmi []model.LunchMenuItem) *LunchMenuCreate {
 	lmc.mutation.SetMenu(mmi)
@@ -166,6 +172,9 @@ func (lmc *LunchMenuCreate) check() error {
 			return &ValidationError{Name: "language", err: fmt.Errorf(`ent: validator failed for field "LunchMenu.language": %w`, err)}
 		}
 	}
+	if _, ok := lmc.mutation.Name(); !ok {
+		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "LunchMenu.name"`)}
+	}
 	if _, ok := lmc.mutation.Menu(); !ok {
 		return &ValidationError{Name: "menu", err: errors.New(`ent: missing required field "LunchMenu.menu"`)}
 	}
@@ -227,6 +236,14 @@ func (lmc *LunchMenuCreate) createSpec() (*LunchMenu, *sqlgraph.CreateSpec) {
 			Column: lunchmenu.FieldLanguage,
 		})
 		_node.Language = value
+	}
+	if value, ok := lmc.mutation.Name(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: lunchmenu.FieldName,
+		})
+		_node.Name = value
 	}
 	if value, ok := lmc.mutation.Menu(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{

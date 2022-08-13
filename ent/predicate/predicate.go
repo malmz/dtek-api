@@ -8,3 +8,6 @@ import (
 
 // LunchMenu is the predicate function for lunchmenu builders.
 type LunchMenu func(*sql.Selector)
+
+// News is the predicate function for news builders.
+type News func(*sql.Selector)
