@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 
@@ -77,5 +78,10 @@ func main() {
 		g.PUT("/news/:id", api.UpdateNews)
 	}
 
-	log.Fatal().Err(e.Start(":8080")).Msg("server exited")
+	host := os.Getenv("HOST")
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	log.Fatal().Err(e.Start(fmt.Sprintf("%s:%s", host, port))).Msg("server exited")
 }
