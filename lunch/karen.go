@@ -3,9 +3,9 @@ package lunch
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/dtekcth/dtek-api/model"
@@ -13,7 +13,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-const freedomFormat = "2/01/2006 03:04:05 PM"
+const freedomFormat = "1/2/2006 03:04:05 PM"
 
 type FreedomTime struct {
 	time.Time
@@ -26,6 +26,8 @@ func (t *FreedomTime) UnmarshalJSON(data []byte) error {
 	}
 
 	var err error
+	// Looking back at this i did not know why the quotes were there
+	// It's because `data` has strings in it. It's trimming them off like pattern matching
 	t.Time, err = time.Parse(`"`+freedomFormat+`"`, string(data))
 	return err
 }
@@ -55,23 +57,52 @@ type DishOccurrence struct {
 				Url  string `json:"allergenUrl" validate:"required"`
 			} `json:"allergens"`
 		} `json:"recipes" validate:"gt=0"`
-	}
+	} `json:"dish" validate:"required"`
 }
 
-const baseUrl = "http://carbonateapiprod.azurewebsites.net/api/v1/mealprovidingunits"
-
 var validate = validator.New()
+var defaultApiUrl = "http://carbonateapiprod.azurewebsites.net/api/v1/mealprovidingunits"
 
-func fetchKarenApi(id string, startDate time.Time, endDate time.Time) ([]DishOccurrence, error) {
-	url := fmt.Sprintf("%s/%s/dishoccurrences?startDate=%s&endDate=%s", baseUrl, id, startDate.Format("2006-01-02"), endDate.Format("2006-01-02"))
-	resp, err := http.Get(url)
+type KarenApiClient struct {
+	baseUrl  string
+	validate *validator.Validate
+}
+
+func NewKarenApiClient(baseUrl string) *KarenApiClient {
+	if baseUrl == "" {
+		baseUrl = defaultApiUrl
+	}
+	return &KarenApiClient{baseUrl: baseUrl, validate: validate}
+}
+
+func (k *KarenApiClient) FetchMenu(id string, startDate *time.Time, endDate *time.Time) ([]DishOccurrence, error) {
+	dateFormat := "2006-01-02"
+
+	query := url.Values{}
+	if startDate != nil {
+		query.Add("startDate", startDate.Format(dateFormat))
+	}
+	if endDate != nil {
+		query.Add("endDate", endDate.Format(dateFormat))
+	}
+	req, err := url.JoinPath(k.baseUrl, id, "dishoccurrences")
+	if err != nil {
+		panic(err)
+	}
+	requ, err := url.Parse(req)
+	if err != nil {
+		panic(err)
+	}
+	requ.RawQuery = query.Encode()
+
+	resp, err := http.Get(requ.String())
 	if err != nil {
 		log.Error().Err(err).Str("id", id).Msg("failed to fetch menu")
 		return nil, err
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		log.Error().Err(err).Str("id", id).Msg("failed to read menu body")
 		return nil, err
@@ -88,18 +119,25 @@ func fetchKarenApi(id string, startDate time.Time, endDate time.Time) ([]DishOcc
 	return dishes, nil
 }
 
+func (k *KarenApiClient) FetchToday(id string) ([]DishOccurrence, error) {
+	return k.FetchMenu(id, nil, nil)
+}
+
+func (k *KarenApiClient) FetchDay(id string, date time.Time) ([]DishOccurrence, error) {
+	return k.FetchMenu(id, &date, nil)
+}
+
 type KarenFetcher struct {
-	id string
+	id     string
+	client *KarenApiClient
 }
 
 func NewKarenFetcher(id string) *KarenFetcher {
-	return &KarenFetcher{id: id}
+	return &KarenFetcher{id: id, client: NewKarenApiClient("")}
 }
 
 func (f *KarenFetcher) Fetch(date time.Time, lang string) (*model.LunchMenu, error) {
-	startDate := date
-	endDate := startDate.AddDate(0, 0, 1)
-	dishes, err := fetchKarenApi(f.id, startDate, endDate)
+	dishes, err := f.client.FetchDay(f.id, date)
 	if err != nil {
 		return nil, err
 	}
@@ -135,11 +173,15 @@ func (f *KarenFetcher) Fetch(date time.Time, lang string) (*model.LunchMenu, err
 			}
 		}
 
-		allergens := make([]model.Allergen, len(dish.DishInfo.Recipes[0].Allergens))
-		for i, v := range dish.DishInfo.Recipes[0].Allergens {
-			allergens[i] = model.Allergen{
-				Code:     v.Code,
-				ImageUrl: v.Url,
+		var allergens []model.Allergen
+
+		if len(dish.DishInfo.Recipes) > 0 {
+			allergens = make([]model.Allergen, len(dish.DishInfo.Recipes[0].Allergens))
+			for i, v := range dish.DishInfo.Recipes[0].Allergens {
+				allergens[i] = model.Allergen{
+					Code:     v.Code,
+					ImageUrl: v.Url,
+				}
 			}
 		}
 
