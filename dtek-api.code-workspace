@@ -1,14 +1,14 @@
 {
-	"folders": [
-		{
-			"path": "."
-		},
-		{
-			"path": "../dtek-svelte"
-		},
-		{
-			"path": "../deploy"
-		}
-	],
-	"settings": {}
+  "folders": [
+    {
+      "path": "."
+    },
+    {
+      "path": "../dtek-svelte"
+    },
+    {
+      "path": "../sk-oidc"
+    }
+  ],
+  "settings": {}
 }
