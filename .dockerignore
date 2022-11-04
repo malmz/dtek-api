@@ -1,5 +1,6 @@
 .git
 .github
+.vscode
 .gitignore
 Dockerfile
 dtek-api
