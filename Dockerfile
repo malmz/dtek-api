@@ -1,5 +1,4 @@
-# syntax=docker/dockerfile:1
-FROM docker.io/golang:1.18 AS build
+FROM docker.io/golang:1.19 AS build
 WORKDIR /app
 
 COPY go.mod ./
@@ -11,6 +10,6 @@ COPY . .
 
 RUN go build -o /dtek-api
 
-FROM gcr.io/distroless/base-debian11
+FROM gcr.io/distroless/base-debian11:latest
 COPY --from=build /dtek-api /
 CMD ["/dtek-api"]
