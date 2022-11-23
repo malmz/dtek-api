@@ -8,6 +8,7 @@ type Allergen struct {
 }
 
 type LunchMenu struct {
+	Resturant string          `json:"resturant"`
 	Name      string          `json:"name"`
 	FetchedAt time.Time       `json:"fetched_at"`
 	Items     []LunchMenuItem `json:"items"`

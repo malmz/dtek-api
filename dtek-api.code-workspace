@@ -10,5 +10,10 @@
       "path": "../sk-oidc"
     }
   ],
-  "settings": {}
+  "settings": {
+    "files.associations": {
+      "*svx": "mdx"
+    },
+    "svelte.plugin.svelte.defaultScriptLanguage": "ts"
+  }
 }

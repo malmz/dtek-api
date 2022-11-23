@@ -45,6 +45,7 @@ func getFromCache(ctx context.Context, resturant string, date time.Time, lang st
 	}
 
 	return &model.LunchMenu{
+		Resturant: menu.Resturant,
 		Name:      menu.Name,
 		FetchedAt: menu.UpdateTime,
 		Items:     menu.Menu,
