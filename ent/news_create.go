@@ -189,35 +189,19 @@ func (nc *NewsCreate) createSpec() (*News, *sqlgraph.CreateSpec) {
 		}
 	)
 	if value, ok := nc.mutation.CreateTime(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: news.FieldCreateTime,
-		})
+		_spec.SetField(news.FieldCreateTime, field.TypeTime, value)
 		_node.CreateTime = value
 	}
 	if value, ok := nc.mutation.UpdateTime(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: news.FieldUpdateTime,
-		})
+		_spec.SetField(news.FieldUpdateTime, field.TypeTime, value)
 		_node.UpdateTime = value
 	}
 	if value, ok := nc.mutation.Title(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: news.FieldTitle,
-		})
+		_spec.SetField(news.FieldTitle, field.TypeString, value)
 		_node.Title = value
 	}
 	if value, ok := nc.mutation.Content(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: news.FieldContent,
-		})
+		_spec.SetField(news.FieldContent, field.TypeString, value)
 		_node.Content = value
 	}
 	return _node, _spec

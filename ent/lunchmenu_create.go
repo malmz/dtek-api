@@ -11,7 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/dtekcth/dtek-api/ent/lunchmenu"
-	"github.com/dtekcth/dtek-api/model"
+	"github.com/dtekcth/dtek-api/ent/schema"
 )
 
 // LunchMenuCreate is the builder for creating a LunchMenu entity.
@@ -68,8 +68,8 @@ func (lmc *LunchMenuCreate) SetName(s string) *LunchMenuCreate {
 }
 
 // SetMenu sets the "menu" field.
-func (lmc *LunchMenuCreate) SetMenu(mmi []model.LunchMenuItem) *LunchMenuCreate {
-	lmc.mutation.SetMenu(mmi)
+func (lmc *LunchMenuCreate) SetMenu(smi []schema.LunchMenuItem) *LunchMenuCreate {
+	lmc.mutation.SetMenu(smi)
 	return lmc
 }
 
@@ -206,51 +206,27 @@ func (lmc *LunchMenuCreate) createSpec() (*LunchMenu, *sqlgraph.CreateSpec) {
 		}
 	)
 	if value, ok := lmc.mutation.UpdateTime(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: lunchmenu.FieldUpdateTime,
-		})
+		_spec.SetField(lunchmenu.FieldUpdateTime, field.TypeTime, value)
 		_node.UpdateTime = value
 	}
 	if value, ok := lmc.mutation.Resturant(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: lunchmenu.FieldResturant,
-		})
+		_spec.SetField(lunchmenu.FieldResturant, field.TypeString, value)
 		_node.Resturant = value
 	}
 	if value, ok := lmc.mutation.Date(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: lunchmenu.FieldDate,
-		})
+		_spec.SetField(lunchmenu.FieldDate, field.TypeTime, value)
 		_node.Date = value
 	}
 	if value, ok := lmc.mutation.Language(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Value:  value,
-			Column: lunchmenu.FieldLanguage,
-		})
+		_spec.SetField(lunchmenu.FieldLanguage, field.TypeEnum, value)
 		_node.Language = value
 	}
 	if value, ok := lmc.mutation.Name(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: lunchmenu.FieldName,
-		})
+		_spec.SetField(lunchmenu.FieldName, field.TypeString, value)
 		_node.Name = value
 	}
 	if value, ok := lmc.mutation.Menu(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeJSON,
-			Value:  value,
-			Column: lunchmenu.FieldMenu,
-		})
+		_spec.SetField(lunchmenu.FieldMenu, field.TypeJSON, value)
 		_node.Menu = value
 	}
 	return _node, _spec

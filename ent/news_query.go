@@ -261,7 +261,6 @@ func (nq *NewsQuery) Clone() *NewsQuery {
 //		GroupBy(news.FieldCreateTime).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-//
 func (nq *NewsQuery) GroupBy(field string, fields ...string) *NewsGroupBy {
 	grbuild := &NewsGroupBy{config: nq.config}
 	grbuild.fields = append([]string{field}, fields...)
@@ -288,13 +287,17 @@ func (nq *NewsQuery) GroupBy(field string, fields ...string) *NewsGroupBy {
 //	client.News.Query().
 //		Select(news.FieldCreateTime).
 //		Scan(ctx, &v)
-//
 func (nq *NewsQuery) Select(fields ...string) *NewsSelect {
 	nq.fields = append(nq.fields, fields...)
 	selbuild := &NewsSelect{NewsQuery: nq}
 	selbuild.label = news.Label
 	selbuild.flds, selbuild.scan = &nq.fields, selbuild.Scan
 	return selbuild
+}
+
+// Aggregate returns a NewsSelect configured with the given aggregations.
+func (nq *NewsQuery) Aggregate(fns ...AggregateFunc) *NewsSelect {
+	return nq.Select().Aggregate(fns...)
 }
 
 func (nq *NewsQuery) prepareQuery(ctx context.Context) error {
@@ -318,10 +321,10 @@ func (nq *NewsQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*News, e
 		nodes = []*News{}
 		_spec = nq.querySpec()
 	)
-	_spec.ScanValues = func(columns []string) ([]interface{}, error) {
+	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*News).scanValues(nil, columns)
 	}
-	_spec.Assign = func(columns []string, values []interface{}) error {
+	_spec.Assign = func(columns []string, values []any) error {
 		node := &News{config: nq.config}
 		nodes = append(nodes, node)
 		return node.assignValues(columns, values)
@@ -348,11 +351,14 @@ func (nq *NewsQuery) sqlCount(ctx context.Context) (int, error) {
 }
 
 func (nq *NewsQuery) sqlExist(ctx context.Context) (bool, error) {
-	n, err := nq.sqlCount(ctx)
-	if err != nil {
+	switch _, err := nq.FirstID(ctx); {
+	case IsNotFound(err):
+		return false, nil
+	case err != nil:
 		return false, fmt.Errorf("ent: check existence: %w", err)
+	default:
+		return true, nil
 	}
-	return n > 0, nil
 }
 
 func (nq *NewsQuery) querySpec() *sqlgraph.QuerySpec {
@@ -453,7 +459,7 @@ func (ngb *NewsGroupBy) Aggregate(fns ...AggregateFunc) *NewsGroupBy {
 }
 
 // Scan applies the group-by query and scans the result into the given value.
-func (ngb *NewsGroupBy) Scan(ctx context.Context, v interface{}) error {
+func (ngb *NewsGroupBy) Scan(ctx context.Context, v any) error {
 	query, err := ngb.path(ctx)
 	if err != nil {
 		return err
@@ -462,7 +468,7 @@ func (ngb *NewsGroupBy) Scan(ctx context.Context, v interface{}) error {
 	return ngb.sqlScan(ctx, v)
 }
 
-func (ngb *NewsGroupBy) sqlScan(ctx context.Context, v interface{}) error {
+func (ngb *NewsGroupBy) sqlScan(ctx context.Context, v any) error {
 	for _, f := range ngb.fields {
 		if !news.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("invalid field %q for group-by", f)}
@@ -487,8 +493,6 @@ func (ngb *NewsGroupBy) sqlQuery() *sql.Selector {
 	for _, fn := range ngb.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
-	// If no columns were selected in a custom aggregation function, the default
-	// selection is the fields used for "group-by", and the aggregation functions.
 	if len(selector.SelectedColumns()) == 0 {
 		columns := make([]string, 0, len(ngb.fields)+len(ngb.fns))
 		for _, f := range ngb.fields {
@@ -508,8 +512,14 @@ type NewsSelect struct {
 	sql *sql.Selector
 }
 
+// Aggregate adds the given aggregation functions to the selector query.
+func (ns *NewsSelect) Aggregate(fns ...AggregateFunc) *NewsSelect {
+	ns.fns = append(ns.fns, fns...)
+	return ns
+}
+
 // Scan applies the selector query and scans the result into the given value.
-func (ns *NewsSelect) Scan(ctx context.Context, v interface{}) error {
+func (ns *NewsSelect) Scan(ctx context.Context, v any) error {
 	if err := ns.prepareQuery(ctx); err != nil {
 		return err
 	}
@@ -517,7 +527,17 @@ func (ns *NewsSelect) Scan(ctx context.Context, v interface{}) error {
 	return ns.sqlScan(ctx, v)
 }
 
-func (ns *NewsSelect) sqlScan(ctx context.Context, v interface{}) error {
+func (ns *NewsSelect) sqlScan(ctx context.Context, v any) error {
+	aggregation := make([]string, 0, len(ns.fns))
+	for _, fn := range ns.fns {
+		aggregation = append(aggregation, fn(ns.sql))
+	}
+	switch n := len(*ns.selector.flds); {
+	case n == 0 && len(aggregation) > 0:
+		ns.sql.Select(aggregation...)
+	case n != 0 && len(aggregation) > 0:
+		ns.sql.AppendSelect(aggregation...)
+	}
 	rows := &sql.Rows{}
 	query, args := ns.sql.Query()
 	if err := ns.driver.Query(ctx, query, args, rows); err != nil {

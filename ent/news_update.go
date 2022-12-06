@@ -133,25 +133,13 @@ func (nu *NewsUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 	}
 	if value, ok := nu.mutation.UpdateTime(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: news.FieldUpdateTime,
-		})
+		_spec.SetField(news.FieldUpdateTime, field.TypeTime, value)
 	}
 	if value, ok := nu.mutation.Title(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: news.FieldTitle,
-		})
+		_spec.SetField(news.FieldTitle, field.TypeString, value)
 	}
 	if value, ok := nu.mutation.Content(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: news.FieldContent,
-		})
+		_spec.SetField(news.FieldContent, field.TypeString, value)
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, nu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -307,25 +295,13 @@ func (nuo *NewsUpdateOne) sqlSave(ctx context.Context) (_node *News, err error) 
 		}
 	}
 	if value, ok := nuo.mutation.UpdateTime(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: news.FieldUpdateTime,
-		})
+		_spec.SetField(news.FieldUpdateTime, field.TypeTime, value)
 	}
 	if value, ok := nuo.mutation.Title(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: news.FieldTitle,
-		})
+		_spec.SetField(news.FieldTitle, field.TypeString, value)
 	}
 	if value, ok := nuo.mutation.Content(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: news.FieldContent,
-		})
+		_spec.SetField(news.FieldContent, field.TypeString, value)
 	}
 	_node = &News{config: nuo.config}
 	_spec.Assign = _node.assignValues

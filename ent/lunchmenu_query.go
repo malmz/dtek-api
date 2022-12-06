@@ -261,7 +261,6 @@ func (lmq *LunchMenuQuery) Clone() *LunchMenuQuery {
 //		GroupBy(lunchmenu.FieldUpdateTime).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-//
 func (lmq *LunchMenuQuery) GroupBy(field string, fields ...string) *LunchMenuGroupBy {
 	grbuild := &LunchMenuGroupBy{config: lmq.config}
 	grbuild.fields = append([]string{field}, fields...)
@@ -288,13 +287,17 @@ func (lmq *LunchMenuQuery) GroupBy(field string, fields ...string) *LunchMenuGro
 //	client.LunchMenu.Query().
 //		Select(lunchmenu.FieldUpdateTime).
 //		Scan(ctx, &v)
-//
 func (lmq *LunchMenuQuery) Select(fields ...string) *LunchMenuSelect {
 	lmq.fields = append(lmq.fields, fields...)
 	selbuild := &LunchMenuSelect{LunchMenuQuery: lmq}
 	selbuild.label = lunchmenu.Label
 	selbuild.flds, selbuild.scan = &lmq.fields, selbuild.Scan
 	return selbuild
+}
+
+// Aggregate returns a LunchMenuSelect configured with the given aggregations.
+func (lmq *LunchMenuQuery) Aggregate(fns ...AggregateFunc) *LunchMenuSelect {
+	return lmq.Select().Aggregate(fns...)
 }
 
 func (lmq *LunchMenuQuery) prepareQuery(ctx context.Context) error {
@@ -318,10 +321,10 @@ func (lmq *LunchMenuQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*L
 		nodes = []*LunchMenu{}
 		_spec = lmq.querySpec()
 	)
-	_spec.ScanValues = func(columns []string) ([]interface{}, error) {
+	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*LunchMenu).scanValues(nil, columns)
 	}
-	_spec.Assign = func(columns []string, values []interface{}) error {
+	_spec.Assign = func(columns []string, values []any) error {
 		node := &LunchMenu{config: lmq.config}
 		nodes = append(nodes, node)
 		return node.assignValues(columns, values)
@@ -348,11 +351,14 @@ func (lmq *LunchMenuQuery) sqlCount(ctx context.Context) (int, error) {
 }
 
 func (lmq *LunchMenuQuery) sqlExist(ctx context.Context) (bool, error) {
-	n, err := lmq.sqlCount(ctx)
-	if err != nil {
+	switch _, err := lmq.FirstID(ctx); {
+	case IsNotFound(err):
+		return false, nil
+	case err != nil:
 		return false, fmt.Errorf("ent: check existence: %w", err)
+	default:
+		return true, nil
 	}
-	return n > 0, nil
 }
 
 func (lmq *LunchMenuQuery) querySpec() *sqlgraph.QuerySpec {
@@ -453,7 +459,7 @@ func (lmgb *LunchMenuGroupBy) Aggregate(fns ...AggregateFunc) *LunchMenuGroupBy 
 }
 
 // Scan applies the group-by query and scans the result into the given value.
-func (lmgb *LunchMenuGroupBy) Scan(ctx context.Context, v interface{}) error {
+func (lmgb *LunchMenuGroupBy) Scan(ctx context.Context, v any) error {
 	query, err := lmgb.path(ctx)
 	if err != nil {
 		return err
@@ -462,7 +468,7 @@ func (lmgb *LunchMenuGroupBy) Scan(ctx context.Context, v interface{}) error {
 	return lmgb.sqlScan(ctx, v)
 }
 
-func (lmgb *LunchMenuGroupBy) sqlScan(ctx context.Context, v interface{}) error {
+func (lmgb *LunchMenuGroupBy) sqlScan(ctx context.Context, v any) error {
 	for _, f := range lmgb.fields {
 		if !lunchmenu.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("invalid field %q for group-by", f)}
@@ -487,8 +493,6 @@ func (lmgb *LunchMenuGroupBy) sqlQuery() *sql.Selector {
 	for _, fn := range lmgb.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
-	// If no columns were selected in a custom aggregation function, the default
-	// selection is the fields used for "group-by", and the aggregation functions.
 	if len(selector.SelectedColumns()) == 0 {
 		columns := make([]string, 0, len(lmgb.fields)+len(lmgb.fns))
 		for _, f := range lmgb.fields {
@@ -508,8 +512,14 @@ type LunchMenuSelect struct {
 	sql *sql.Selector
 }
 
+// Aggregate adds the given aggregation functions to the selector query.
+func (lms *LunchMenuSelect) Aggregate(fns ...AggregateFunc) *LunchMenuSelect {
+	lms.fns = append(lms.fns, fns...)
+	return lms
+}
+
 // Scan applies the selector query and scans the result into the given value.
-func (lms *LunchMenuSelect) Scan(ctx context.Context, v interface{}) error {
+func (lms *LunchMenuSelect) Scan(ctx context.Context, v any) error {
 	if err := lms.prepareQuery(ctx); err != nil {
 		return err
 	}
@@ -517,7 +527,17 @@ func (lms *LunchMenuSelect) Scan(ctx context.Context, v interface{}) error {
 	return lms.sqlScan(ctx, v)
 }
 
-func (lms *LunchMenuSelect) sqlScan(ctx context.Context, v interface{}) error {
+func (lms *LunchMenuSelect) sqlScan(ctx context.Context, v any) error {
+	aggregation := make([]string, 0, len(lms.fns))
+	for _, fn := range lms.fns {
+		aggregation = append(aggregation, fn(lms.sql))
+	}
+	switch n := len(*lms.selector.flds); {
+	case n == 0 && len(aggregation) > 0:
+		lms.sql.Select(aggregation...)
+	case n != 0 && len(aggregation) > 0:
+		lms.sql.AppendSelect(aggregation...)
+	}
 	rows := &sql.Rows{}
 	query, args := lms.sql.Query()
 	if err := lms.driver.Query(ctx, query, args, rows); err != nil {

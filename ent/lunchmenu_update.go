@@ -10,10 +10,11 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"entgo.io/ent/dialect/sql/sqljson"
 	"entgo.io/ent/schema/field"
 	"github.com/dtekcth/dtek-api/ent/lunchmenu"
 	"github.com/dtekcth/dtek-api/ent/predicate"
-	"github.com/dtekcth/dtek-api/model"
+	"github.com/dtekcth/dtek-api/ent/schema"
 )
 
 // LunchMenuUpdate is the builder for updating LunchMenu entities.
@@ -74,8 +75,14 @@ func (lmu *LunchMenuUpdate) SetName(s string) *LunchMenuUpdate {
 }
 
 // SetMenu sets the "menu" field.
-func (lmu *LunchMenuUpdate) SetMenu(mmi []model.LunchMenuItem) *LunchMenuUpdate {
-	lmu.mutation.SetMenu(mmi)
+func (lmu *LunchMenuUpdate) SetMenu(smi []schema.LunchMenuItem) *LunchMenuUpdate {
+	lmu.mutation.SetMenu(smi)
+	return lmu
+}
+
+// AppendMenu appends smi to the "menu" field.
+func (lmu *LunchMenuUpdate) AppendMenu(smi []schema.LunchMenuItem) *LunchMenuUpdate {
+	lmu.mutation.AppendMenu(smi)
 	return lmu
 }
 
@@ -182,51 +189,29 @@ func (lmu *LunchMenuUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 	}
 	if value, ok := lmu.mutation.UpdateTime(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: lunchmenu.FieldUpdateTime,
-		})
+		_spec.SetField(lunchmenu.FieldUpdateTime, field.TypeTime, value)
 	}
 	if value, ok := lmu.mutation.Resturant(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: lunchmenu.FieldResturant,
-		})
+		_spec.SetField(lunchmenu.FieldResturant, field.TypeString, value)
 	}
 	if value, ok := lmu.mutation.Date(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: lunchmenu.FieldDate,
-		})
+		_spec.SetField(lunchmenu.FieldDate, field.TypeTime, value)
 	}
 	if value, ok := lmu.mutation.Language(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Value:  value,
-			Column: lunchmenu.FieldLanguage,
-		})
+		_spec.SetField(lunchmenu.FieldLanguage, field.TypeEnum, value)
 	}
 	if lmu.mutation.LanguageCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Column: lunchmenu.FieldLanguage,
-		})
+		_spec.ClearField(lunchmenu.FieldLanguage, field.TypeEnum)
 	}
 	if value, ok := lmu.mutation.Name(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: lunchmenu.FieldName,
-		})
+		_spec.SetField(lunchmenu.FieldName, field.TypeString, value)
 	}
 	if value, ok := lmu.mutation.Menu(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeJSON,
-			Value:  value,
-			Column: lunchmenu.FieldMenu,
+		_spec.SetField(lunchmenu.FieldMenu, field.TypeJSON, value)
+	}
+	if value, ok := lmu.mutation.AppendedMenu(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, lunchmenu.FieldMenu, value)
 		})
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, lmu.driver, _spec); err != nil {
@@ -293,8 +278,14 @@ func (lmuo *LunchMenuUpdateOne) SetName(s string) *LunchMenuUpdateOne {
 }
 
 // SetMenu sets the "menu" field.
-func (lmuo *LunchMenuUpdateOne) SetMenu(mmi []model.LunchMenuItem) *LunchMenuUpdateOne {
-	lmuo.mutation.SetMenu(mmi)
+func (lmuo *LunchMenuUpdateOne) SetMenu(smi []schema.LunchMenuItem) *LunchMenuUpdateOne {
+	lmuo.mutation.SetMenu(smi)
+	return lmuo
+}
+
+// AppendMenu appends smi to the "menu" field.
+func (lmuo *LunchMenuUpdateOne) AppendMenu(smi []schema.LunchMenuItem) *LunchMenuUpdateOne {
+	lmuo.mutation.AppendMenu(smi)
 	return lmuo
 }
 
@@ -431,51 +422,29 @@ func (lmuo *LunchMenuUpdateOne) sqlSave(ctx context.Context) (_node *LunchMenu, 
 		}
 	}
 	if value, ok := lmuo.mutation.UpdateTime(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: lunchmenu.FieldUpdateTime,
-		})
+		_spec.SetField(lunchmenu.FieldUpdateTime, field.TypeTime, value)
 	}
 	if value, ok := lmuo.mutation.Resturant(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: lunchmenu.FieldResturant,
-		})
+		_spec.SetField(lunchmenu.FieldResturant, field.TypeString, value)
 	}
 	if value, ok := lmuo.mutation.Date(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: lunchmenu.FieldDate,
-		})
+		_spec.SetField(lunchmenu.FieldDate, field.TypeTime, value)
 	}
 	if value, ok := lmuo.mutation.Language(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Value:  value,
-			Column: lunchmenu.FieldLanguage,
-		})
+		_spec.SetField(lunchmenu.FieldLanguage, field.TypeEnum, value)
 	}
 	if lmuo.mutation.LanguageCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeEnum,
-			Column: lunchmenu.FieldLanguage,
-		})
+		_spec.ClearField(lunchmenu.FieldLanguage, field.TypeEnum)
 	}
 	if value, ok := lmuo.mutation.Name(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: lunchmenu.FieldName,
-		})
+		_spec.SetField(lunchmenu.FieldName, field.TypeString, value)
 	}
 	if value, ok := lmuo.mutation.Menu(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeJSON,
-			Value:  value,
-			Column: lunchmenu.FieldMenu,
+		_spec.SetField(lunchmenu.FieldMenu, field.TypeJSON, value)
+	}
+	if value, ok := lmuo.mutation.AppendedMenu(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, lunchmenu.FieldMenu, value)
 		})
 	}
 	_node = &LunchMenu{config: lmuo.config}

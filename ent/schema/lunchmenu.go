@@ -5,8 +5,21 @@ import (
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
 	"entgo.io/ent/schema/mixin"
-	"github.com/dtekcth/dtek-api/model"
 )
+
+type Allergen struct {
+	Code     string `json:"code"`
+	ImageUrl string `json:"imageUrl"`
+}
+
+type LunchMenuItem struct {
+	Title        string     `json:"title"`
+	Body         string     `json:"body"`
+	Preformatted bool       `json:"preformatted"`
+	Allergens    []Allergen `json:"allergen"`
+	Emission     float64    `json:"emission"`
+	Price        string     `json:"price"`
+}
 
 // LunchMenu holds the schema definition for the LunchMenu entity.
 type LunchMenu struct {
@@ -20,7 +33,7 @@ func (LunchMenu) Fields() []ent.Field {
 		field.Time("date"),
 		field.Enum("language").Values("se", "en").Optional(),
 		field.String("name"),
-		field.JSON("menu", []model.LunchMenuItem{}),
+		field.JSON("menu", []LunchMenuItem{}),
 	}
 }
 

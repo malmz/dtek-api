@@ -8,7 +8,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/dtekcth/dtek-api/model"
+	"github.com/dtekcth/dtek-api/ent/schema"
 	"github.com/go-playground/validator/v10"
 	"github.com/rs/zerolog/log"
 )
@@ -136,7 +136,7 @@ func NewKarenFetcher(id string) *KarenFetcher {
 	return &KarenFetcher{id: id, client: NewKarenApiClient("")}
 }
 
-func (f *KarenFetcher) Fetch(date time.Time, lang string) (*model.LunchMenu, error) {
+func (f *KarenFetcher) FetchByDate(date time.Time, lang string) (*LunchFetchResult, error) {
 	dishes, err := f.client.FetchDay(f.id, date)
 	if err != nil {
 		return nil, err
@@ -155,7 +155,7 @@ func (f *KarenFetcher) Fetch(date time.Time, lang string) (*model.LunchMenu, err
 
 	name := dishes[0].Resturant.Name
 
-	items := make([]model.LunchMenuItem, len(dishes))
+	items := make([]schema.LunchMenuItem, len(dishes))
 
 	for i, dish := range dishes {
 		var body, title string
@@ -173,19 +173,19 @@ func (f *KarenFetcher) Fetch(date time.Time, lang string) (*model.LunchMenu, err
 			}
 		}
 
-		var allergens []model.Allergen
+		var allergens []schema.Allergen
 
 		if len(dish.DishInfo.Recipes) > 0 {
-			allergens = make([]model.Allergen, len(dish.DishInfo.Recipes[0].Allergens))
+			allergens = make([]schema.Allergen, len(dish.DishInfo.Recipes[0].Allergens))
 			for i, v := range dish.DishInfo.Recipes[0].Allergens {
-				allergens[i] = model.Allergen{
+				allergens[i] = schema.Allergen{
 					Code:     v.Code,
 					ImageUrl: v.Url,
 				}
 			}
 		}
 
-		items[i] = model.LunchMenuItem{
+		items[i] = schema.LunchMenuItem{
 			Title:        title,
 			Body:         body,
 			Preformatted: false,
@@ -195,7 +195,7 @@ func (f *KarenFetcher) Fetch(date time.Time, lang string) (*model.LunchMenu, err
 		}
 	}
 
-	return &model.LunchMenu{
+	return &LunchFetchResult{
 		Name:  name,
 		Items: items,
 	}, nil

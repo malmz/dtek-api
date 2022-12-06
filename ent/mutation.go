@@ -12,7 +12,7 @@ import (
 	"github.com/dtekcth/dtek-api/ent/lunchmenu"
 	"github.com/dtekcth/dtek-api/ent/news"
 	"github.com/dtekcth/dtek-api/ent/predicate"
-	"github.com/dtekcth/dtek-api/model"
+	"github.com/dtekcth/dtek-api/ent/schema"
 
 	"entgo.io/ent"
 )
@@ -41,7 +41,8 @@ type LunchMenuMutation struct {
 	date          *time.Time
 	language      *lunchmenu.Language
 	name          *string
-	menu          *[]model.LunchMenuItem
+	menu          *[]schema.LunchMenuItem
+	appendmenu    []schema.LunchMenuItem
 	clearedFields map[string]struct{}
 	done          bool
 	oldValue      func(context.Context) (*LunchMenu, error)
@@ -340,12 +341,13 @@ func (m *LunchMenuMutation) ResetName() {
 }
 
 // SetMenu sets the "menu" field.
-func (m *LunchMenuMutation) SetMenu(mmi []model.LunchMenuItem) {
-	m.menu = &mmi
+func (m *LunchMenuMutation) SetMenu(smi []schema.LunchMenuItem) {
+	m.menu = &smi
+	m.appendmenu = nil
 }
 
 // Menu returns the value of the "menu" field in the mutation.
-func (m *LunchMenuMutation) Menu() (r []model.LunchMenuItem, exists bool) {
+func (m *LunchMenuMutation) Menu() (r []schema.LunchMenuItem, exists bool) {
 	v := m.menu
 	if v == nil {
 		return
@@ -356,7 +358,7 @@ func (m *LunchMenuMutation) Menu() (r []model.LunchMenuItem, exists bool) {
 // OldMenu returns the old "menu" field's value of the LunchMenu entity.
 // If the LunchMenu object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *LunchMenuMutation) OldMenu(ctx context.Context) (v []model.LunchMenuItem, err error) {
+func (m *LunchMenuMutation) OldMenu(ctx context.Context) (v []schema.LunchMenuItem, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldMenu is only allowed on UpdateOne operations")
 	}
@@ -370,9 +372,23 @@ func (m *LunchMenuMutation) OldMenu(ctx context.Context) (v []model.LunchMenuIte
 	return oldValue.Menu, nil
 }
 
+// AppendMenu adds smi to the "menu" field.
+func (m *LunchMenuMutation) AppendMenu(smi []schema.LunchMenuItem) {
+	m.appendmenu = append(m.appendmenu, smi...)
+}
+
+// AppendedMenu returns the list of values that were appended to the "menu" field in this mutation.
+func (m *LunchMenuMutation) AppendedMenu() ([]schema.LunchMenuItem, bool) {
+	if len(m.appendmenu) == 0 {
+		return nil, false
+	}
+	return m.appendmenu, true
+}
+
 // ResetMenu resets all changes to the "menu" field.
 func (m *LunchMenuMutation) ResetMenu() {
 	m.menu = nil
+	m.appendmenu = nil
 }
 
 // Where appends a list predicates to the LunchMenuMutation builder.
@@ -499,7 +515,7 @@ func (m *LunchMenuMutation) SetField(name string, value ent.Value) error {
 		m.SetName(v)
 		return nil
 	case lunchmenu.FieldMenu:
-		v, ok := value.([]model.LunchMenuItem)
+		v, ok := value.([]schema.LunchMenuItem)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}

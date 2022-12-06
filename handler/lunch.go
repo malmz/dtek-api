@@ -1,11 +1,11 @@
-package api
+package handler
 
 import (
 	"net/http"
 	"time"
 
-	"github.com/dtekcth/dtek-api/lunch"
 	"github.com/dtekcth/dtek-api/model"
+	"github.com/dtekcth/dtek-api/service/lunch"
 	"github.com/labstack/echo/v4"
 )
 
@@ -15,8 +15,9 @@ type lunchRequest struct {
 	Date      string   `query:"date" validate:"datetime"`
 }
 
-func GetLunch(c echo.Context) error {
+func (e *Env) GetLunch(c echo.Context) error {
 	ctx := c.Request().Context()
+
 	req := lunchRequest{}
 	var err error
 	if err = c.Bind(&req); err != nil {

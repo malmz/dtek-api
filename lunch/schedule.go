@@ -1,5 +1,0 @@
-package lunch
-
-func StartFetchSchedule() {
-
-}

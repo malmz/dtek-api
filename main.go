@@ -1,13 +1,18 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"os"
 
-	"github.com/dtekcth/dtek-api/api"
-	"github.com/dtekcth/dtek-api/db"
+	"github.com/dtekcth/dtek-api/ent"
+	"github.com/dtekcth/dtek-api/handler"
+	mw "github.com/dtekcth/dtek-api/middleware"
+	"github.com/dtekcth/dtek-api/service/lunch"
+
 	"github.com/go-playground/validator/v10"
+	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/rs/zerolog"
@@ -26,10 +31,26 @@ func (v *Validator) Validate(i interface{}) error {
 }
 
 func main() {
+	// Init logger
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: "15:04"})
 	zerolog.SetGlobalLevel(zerolog.DebugLevel)
 
-	db.Init()
+	// Load .env file
+	if err := godotenv.Load(); err != nil {
+		log.Fatal().Err(err).Msg("Failed to load .env file")
+	}
+
+	// Open database connection
+	db, err := ent.Open(os.Getenv("DB_TYPE"), os.Getenv("DB_DSN"))
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed opening connection to database")
+	}
+
+	// Run migrations
+	if err := db.Schema.Create(context.Background()); err != nil {
+		log.Fatal().Err(err).Msg("failed creating schema resources")
+	}
+
 	defer db.Close()
 
 	e := echo.New()
@@ -38,9 +59,7 @@ func main() {
 	e.Debug = true
 	e.Validator = &Validator{validate: validator.New()}
 
-	log.Info().Msg("Starting server")
-	log.Debug().Msg("Debug mode enabled")
-
+	// Set echo to use zerolog
 	e.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
 		LogURI:     true,
 		LogMethod:  true,
@@ -57,6 +76,8 @@ func main() {
 			return nil
 		},
 	}))
+
+	// Recover from panics in handlers
 	e.Use(middleware.RecoverWithConfig(middleware.RecoverConfig{
 		LogErrorFunc: func(c echo.Context, err error, stack []byte) error {
 			log.Error().
@@ -66,17 +87,25 @@ func main() {
 			return nil
 		},
 	}))
+
+	// Add CORS
 	e.Use(middleware.CORS())
+
+	authmw := mw.Hydra()
+	lunchService := &lunch.Service{Db: db}
+	env := &handler.Env{Db: db, LunchService: lunchService}
 
 	{
 		g := e.Group("/api")
-		g.GET("/lunch", api.GetLunch)
+		g.GET("/lunch", env.GetLunch)
 
-		g.GET("/news", api.GetAllNews)
-		g.POST("/news", api.CreateNews)
-		g.GET("/news/:id", api.GetNews)
-		g.PUT("/news/:id", api.UpdateNews)
+		g.GET("/news", env.ListNews)
+		g.POST("/news", env.CreateNews, authmw)
+		g.GET("/news/:id", env.GetNews)
+		g.PUT("/news/:id", env.UpdateNews, authmw)
 	}
+
+	e.GET("/hydra", env.HydraTest, authmw)
 
 	host := os.Getenv("HOST")
 	port := os.Getenv("PORT")

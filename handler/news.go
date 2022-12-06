@@ -1,23 +1,21 @@
-package api
+package handler
 
 import (
 	"net/http"
 	"strconv"
 
-	"github.com/dtekcth/dtek-api/db"
 	"github.com/dtekcth/dtek-api/model"
 	"github.com/labstack/echo/v4"
 )
 
-func CreateNews(c echo.Context) error {
+func (e *Env) CreateNews(c echo.Context) error {
 	ctx := c.Request().Context()
-	db := db.Get()
 	news := &model.News{}
 	if err := c.Bind(news); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	n, err := db.News.Create().SetTitle(news.Title).SetContent(news.Content).Save(ctx)
+	n, err := e.Db.News.Create().SetTitle(news.Title).SetContent(news.Content).Save(ctx)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
@@ -31,10 +29,9 @@ func CreateNews(c echo.Context) error {
 	return c.JSON(http.StatusOK, mdlNews)
 }
 
-func GetAllNews(c echo.Context) error {
+func (e *Env) ListNews(c echo.Context) error {
 	ctx := c.Request().Context()
-	db := db.Get()
-	news, err := db.News.Query().All(ctx)
+	news, err := e.Db.News.Query().All(ctx)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
@@ -51,14 +48,13 @@ func GetAllNews(c echo.Context) error {
 	return c.JSON(http.StatusOK, mdlNews)
 }
 
-func GetNews(c echo.Context) error {
+func (e *Env) GetNews(c echo.Context) error {
 	ctx := c.Request().Context()
-	db := db.Get()
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
-	n, err := db.News.Get(ctx, id)
+	n, err := e.Db.News.Get(ctx, id)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
@@ -72,9 +68,8 @@ func GetNews(c echo.Context) error {
 	return c.JSON(http.StatusOK, mdlNews)
 }
 
-func UpdateNews(c echo.Context) error {
+func (e *Env) UpdateNews(c echo.Context) error {
 	ctx := c.Request().Context()
-	db := db.Get()
 
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -86,7 +81,7 @@ func UpdateNews(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	n, err := db.News.UpdateOneID(id).SetTitle(news.Title).SetContent(news.Content).Save(ctx)
+	n, err := e.Db.News.UpdateOneID(id).SetTitle(news.Title).SetContent(news.Content).Save(ctx)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
