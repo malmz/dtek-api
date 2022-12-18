@@ -14,6 +14,24 @@
     "files.associations": {
       "*svx": "mdx"
     },
-    "svelte.plugin.svelte.defaultScriptLanguage": "ts"
+    "svelte.plugin.svelte.defaultScriptLanguage": "ts",
+    "sqltools.connections": [
+      {
+        "previewLimit": 50,
+        "server": "192.168.1.5",
+        "port": 5432,
+        "driver": "PostgreSQL",
+        "name": "dtek prod",
+        "group": "local",
+        "database": "dtek",
+        "username": "postgres",
+        "password": "password"
+      }
+    ],
+    "sqltools.highlightQuery": false,
+    "sqltools.format": {
+      "linesBetweenQueries": 2,
+      "reservedWordCase": "upper"
+    }
   }
 }

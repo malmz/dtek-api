@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"embed"
 	"fmt"
 	"net/http"
 	"os"
@@ -15,9 +16,14 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	_ "github.com/lib/pq"
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
+
+//go:embed db/schema/*.sql
+var embededMigrations embed.FS
 
 type Validator struct {
 	validate *validator.Validate
@@ -41,6 +47,17 @@ func main() {
 	}
 
 	// Open database connection
+	/* pool, err := pgxpool.Connect(context.Background(), os.Getenv("DB_DSN"))
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to connect to database")
+	} */
+
+	/* 	goose.SetBaseFS(embededMigrations)
+	   	goose.SetDialect("postgres")
+	   	goose.Up(pool., "db/schema") */
+
+	//_db2 := db.New(pool)
+
 	db, err := ent.Open(os.Getenv("DB_TYPE"), os.Getenv("DB_DSN"))
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed opening connection to database")
@@ -55,7 +72,7 @@ func main() {
 
 	e := echo.New()
 
-	e.HideBanner = true
+	//e.HideBanner = true
 	e.Debug = true
 	e.Validator = &Validator{validate: validator.New()}
 

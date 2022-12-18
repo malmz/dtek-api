@@ -45,7 +45,7 @@ func setCache(ctx context.Context, db *ent.Client, resturant string, lang string
 		Save(ctx)
 }
 
-func setCacheMultiple(ctx context.Context, db *ent.Client, resturant string, lang string, menu []*LunchFetchResult) ([]*ent.LunchMenu, error) {
+func setCacheMultiple(ctx context.Context, db *ent.Client, resturant string, lang string, menu []LunchFetchResult) ([]*ent.LunchMenu, error) {
 	bulk := make([]*ent.LunchMenuCreate, len(menu))
 	for i, m := range menu {
 		bulk[i] = db.LunchMenu.Create().

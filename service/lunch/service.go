@@ -21,7 +21,7 @@ func (s *Service) GetByDate(ctx context.Context, resturant string, date time.Tim
 		return menu, nil
 	}
 
-	result, err := fetchByDate(resturant, date, lang)
+	result, err := fetchByDate(ctx, resturant, date, lang)
 	if err != nil {
 		return nil, err
 	}
@@ -34,7 +34,7 @@ func (s *Service) GetByWeek(ctx context.Context, resturant string, date time.Tim
 		return menu, nil
 	}
 
-	result, err := fetchByWeek(resturant, date, lang)
+	result, err := fetchByWeek(ctx, resturant, date, lang)
 	if err != nil {
 		return nil, err
 	}
