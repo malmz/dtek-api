@@ -11,6 +11,7 @@ import (
 	"github.com/dtekcth/dtek-api/handler"
 	mw "github.com/dtekcth/dtek-api/middleware"
 	"github.com/dtekcth/dtek-api/service/lunch"
+	"github.com/dtekcth/dtek-api/service/pr"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/joho/godotenv"
@@ -110,7 +111,8 @@ func main() {
 
 	authmw := mw.Hydra()
 	lunchService := &lunch.Service{Db: db}
-	env := &handler.Env{Db: db, LunchService: lunchService}
+	prService := pr.NewService("c_012de84a3e299139f30e87ac76c2704f1585161d031007c5b81438af0e7f5b15@group.calendar.google.com")
+	env := &handler.Env{Db: db, LunchService: lunchService, PrService: prService}
 
 	{
 		g := e.Group("/api")
@@ -120,6 +122,8 @@ func main() {
 		g.POST("/news", env.CreateNews, authmw)
 		g.GET("/news/:id", env.GetNews)
 		g.PUT("/news/:id", env.UpdateNews, authmw)
+
+		g.POST("/pr", env.CreateEvent)
 	}
 
 	e.GET("/hydra", env.HydraTest, authmw)
