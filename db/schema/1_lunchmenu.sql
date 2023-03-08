@@ -4,7 +4,7 @@ CREATE TYPE language AS ENUM ('none', 'sv', 'en');
 CREATE TABLE lunch_menus (
     id serial PRIMARY KEY,
     resturant text NOT NULL,
-    date timestamp with time zone NOT NULL,
+    date date NOT NULL,
     language language NOT NULL DEFAULT 'none',
     name text NOT NULL,
     menu jsonb NOT NULL,

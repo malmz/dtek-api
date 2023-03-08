@@ -1,9 +1,15 @@
+-- +goose Up
 CREATE TABLE news (
     id serial PRIMARY KEY,
-    resturant text NOT NULL,
-    date timestamp WITH time zone NOT NULL,
-    language language NOT NULL DEFAULT 'none',
-    name text NOT NULL,
-    menu jsonb NOT NULL,
-    fetched_at timestamp WITH time zone NOT NULL DEFAULT NOW()
+    title_sv text NOT NULL,
+    body_sv text NOT NULL,
+    title_en text NOT NULL,
+    body_en text NOT NULL,
+    committee text,
+    author text,
+    created_at timestamp with time zone NOT NULL DEFAULT now(),
+    updated_at timestamp with time zone NOT NULL DEFAULT now(),
 );
+
+-- +goose Down
+DROP TABLE news;

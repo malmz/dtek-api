@@ -45,7 +45,6 @@ func (e *Env) GetLunch(c echo.Context) error {
 
 		items := make([]model.LunchMenuItem, 0, len(menu.Menu))
 		for _, item := range menu.Menu {
-
 			allergens := make([]model.Allergen, 0, len(item.Allergens))
 			for _, a := range item.Allergens {
 				allergens = append(allergens, model.Allergen{

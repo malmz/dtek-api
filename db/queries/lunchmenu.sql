@@ -8,7 +8,6 @@ INSERT INTO lunch_menus (
     )
 VALUES ($1, $2, $3, $4, $5);
 
---RETURNING *;
 -- name: GetLunchByDate :one
 SELECT *
 FROM lunch_menus
